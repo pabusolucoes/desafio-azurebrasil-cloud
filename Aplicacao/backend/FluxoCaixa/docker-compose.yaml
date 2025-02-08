@@ -1,0 +1,92 @@
+version: "3.9"
+
+services:
+  fluxo-caixa-lancamentos:
+    build:
+      context: ./Microservicos/FluxoCaixa.Lancamentos
+      dockerfile: Dockerfile
+    container_name: fluxo_caixa_lancamentos
+    ports:
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5001
+    networks:
+      - app_network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      dynamodb:
+        condition: service_started
+
+  fluxo-caixa-consolidado:
+    build:
+      context: ./Microservicos/FluxoCaixa.ConsolidadoDiario
+      dockerfile: Dockerfile
+    container_name: fluxo_caixa_consolidado
+    ports:
+      - "5002:5002"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5002
+    networks:
+      - app_network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      dynamodb:
+        condition: service_started
+
+  fluxo-caixa-integracoes:
+    build:
+      context: ./Microservicos/FluxoCaixa.Integracoes
+      dockerfile: Dockerfile
+    container_name: fluxo_caixa_integracoes
+    ports:
+      - "5003:5003"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5003
+    networks:
+      - app_network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      dynamodb:
+        condition: service_started
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb
+    ports:
+      - "8000:8000"
+    volumes:
+      - dynamodb_data:/home/dynamodblocal
+    networks:
+      - app_network
+    command: "-jar DynamoDBLocal.jar -sharedDb"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # Porta padrão do RabbitMQ para comunicação
+      - "15672:15672" # Porta para acessar o painel de gerenciamento web
+    networks:
+      - app_network
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s      
+
+networks:
+  app_network:
+    name: app_network
+
+volumes:
+  dynamodb_data:

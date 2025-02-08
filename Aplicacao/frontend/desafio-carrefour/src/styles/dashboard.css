@@ -1,0 +1,168 @@
+/* Estilização do container principal */
+.dashboard-container {
+    padding: 20px;
+    max-width: 1400px; /* Aumente o valor conforme necessário */
+    width: 100%; /* Ocupa 100% da largura disponível */
+    margin: 0 auto;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Filtro */
+  .filter-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+  }
+  
+  .filter-container label {
+    font-weight: bold;
+  }
+  
+  .filter-container select {
+    padding: 8px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: 1px solid #d1d3e2;
+    background-color: #ffffff;
+    color: #333;
+    cursor: pointer;
+  }
+  
+  /* Evita que o texto fique invisível ao selecionar */
+  .filter-container select option {
+    background-color: #ffffff;
+    color: #333;
+  }
+  
+  /* Tag de filtro */
+  .filter-tag {
+    background-color: #4e73df;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-block;
+    white-space: nowrap;
+  }
+  
+  /* Formulário de lançamento */
+  .form-lancamento {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap; /* Mantém os elementos na mesma linha */
+    gap: 10px;
+    margin-bottom: 20px;
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    overflow-x: auto;
+  }
+  
+  /* Inputs do formulário */
+  .form-lancamento input,
+  .form-lancamento select {
+    padding: 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: 1px solid #d1d3e2;
+    background-color: #f8f9fc;
+    color: #333;
+    min-width: 120px;
+    flex-grow: 1;
+  }
+  
+  /* Garante que os inputs não fiquem muito largos */
+  .form-lancamento input[type="date"],
+  .form-lancamento input[type="number"],
+  .form-lancamento select {
+    max-width: 150px;
+  }
+  
+  .form-lancamento input:focus,
+  .form-lancamento select:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 5px rgba(78, 115, 223, 0.5);
+    outline: none;
+  }
+  
+  /* Botão de salvar na mesma linha */
+  .form-lancamento button {
+    padding: 10px 15px;
+    font-size: 12px;
+    border-radius: 4px;
+    background-color: #4e73df;
+    color: white;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    min-width: 100px;
+  }
+  
+  .form-lancamento button:hover {
+    background-color: #375abf;
+  }
+  
+  /* Container da tabela */
+  .table-container {
+    width: 100%;
+    height: 400px; /* Define um tamanho fixo para a tabela */
+    overflow-y: auto; /* Adiciona rolagem vertical caso o número de linhas diminua */
+    overflow-x: auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  /* Estilização da tabela */
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+  }
+  
+  .table th,
+  .table td {
+    border: 1px solid #e3e6f0;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  /* Cabeçalho da tabela */
+  .table th {
+    background-color: #f8f9fc;
+    color: #5a5c69;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 20px;
+  }
+  
+  .table th:hover {
+    background-color: #e2e6ea;
+  }
+  
+  /* Ícones de ordenação */
+  .table th::after {
+    content: " ▲▼";
+    font-size: 12px;
+    color: #6c757d;
+    margin-left: 5px;
+    position: absolute;
+    right: 5px;
+  }
+  
+  th.sorted-asc::after {
+    content: " ▲";
+    color: #4e73df;
+  }
+  
+  th.sorted-desc::after {
+    content: " ▼";
+    color: #4e73df;
+  }
+  

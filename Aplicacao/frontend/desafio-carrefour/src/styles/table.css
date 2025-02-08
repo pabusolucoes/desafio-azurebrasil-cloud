@@ -1,0 +1,81 @@
+/* Define largura fixa para a primeira coluna */
+.table th:first-child,
+.table td:first-child {
+  width: 80px; /* Ajuste o valor conforme necessário */
+  min-width: 80px; /* Garante que a coluna não fique menor */
+  max-width: 80px; /* Define um limite superior para a largura */
+  text-align: center; /* Centraliza o conteúdo */
+}
+/* Cabeçalho da tabela */
+.table th {
+    background-color: #f8f9fc;
+    color: #5a5c69;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 20px; /* Espaço para os ícones */
+    text-align: left;
+    font-size: 12px; /* Reduz o tamanho da fonte */
+    font-weight: normal; /* Deixa o texto mais leve */
+  }
+  
+  .table th:hover {
+    background-color: #e2e6ea;
+  }
+  
+/* Ícones de ordenação */
+th.sorted-asc::after,
+th.sorted-desc::after {
+  font-size: 10px; /* Reduz o tamanho dos ícones */
+  right: 5px; /* Ajusta a posição horizontal */
+}
+
+  /* Remove setas fixas por padrão */
+  .table th::after {
+    content: ""; /* Remove o conteúdo inicial */
+  }
+  
+  /* Exibe a seta correta apenas na coluna ordenada */
+  th.sorted-asc::after {
+    content: " ▲"; /* Seta para cima (ordem ascendente) */
+    color: #4e73df;
+    position: absolute;
+    right: 10px;
+  }
+  
+  th.sorted-desc::after {
+    content: " ▼"; /* Seta para baixo (ordem descendente) */
+    color: #4e73df;
+    position: absolute;
+    right: 10px;
+  }
+  /* Botões da tabela */
+.table td .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap; /* Impede quebra de linha */
+  }
+  
+  /* Botão de edição (estilo warning) */
+  .table td .btn-warning {
+    background-color: #f0ad4e;
+    color: white;
+  }
+  
+  .table td .btn-warning:hover {
+    background-color: #ec971f;
+  }
+  
+  /* Botão de exclusão (estilo danger) */
+  .table td .btn-danger {
+    background-color: #d9534f;
+    color: white;
+  }
+  
+  .table td .btn-danger:hover {
+    background-color: #c9302c;
+  }
+  

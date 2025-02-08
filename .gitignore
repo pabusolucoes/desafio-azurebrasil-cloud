@@ -1,0 +1,88 @@
+# 🔹 Diretórios de build e temporários
+bin/
+obj/
+out/
+Debug/
+Release/
+TestResults/
+.vscode/
+.idea/
+.vs/
+*.user
+*.suo
+*.cache
+*.pdb
+*.log
+*.csproj.user
+*.csproj.DotSettings.user
+*.csproj.DotSettings
+
+# 🔹 Configurações de editor (VS Code e Visual Studio)
+.vscode/
+.vs/
+.vscode-test/
+
+# 🔹 Arquivos de log e temporários
+*.log
+*.tmp
+*.swo
+*.swp
+*.bak
+
+# 🔹 Configuração do NuGet
+.nuget/
+packages/
+project.lock.json
+project.assets.json
+PackageRestore.log
+
+# 🔹 Arquivos 
+# 🔹 Diretórios do Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnp/
+.pnp.js
+
+# 🔹 Diretórios do Build
+build/
+dist/
+.temp/
+
+# 🔹 Arquivos de dependências lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 🔹 Cache do npm & Yarn
+.npm/
+.yarn/
+.yarn-cache/
+.yarnrc.yml
+
+# 🔹 Configuração do editor (VS Code e WebStorm)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 🔹 Logs e arquivos temporários
+logs/
+*.log
+*.gz
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+lerna-debug.log
+
+# 🔹 Testes e Cobertura
+/coverage
+/jest
+*.snap
+.nyc_output/
+
