@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Registra o ICustomEnvironment para ser injetado em toda aplicação
 builder.Services.AddSingleton<ICustomEnvironment, CustomEnvironment>();
+builder.Services.AddSingleton<DynamoDbService>();
 
 // Adiciona serviços do Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -33,67 +34,82 @@ if (env.IsLocal())
     });
 }
 
-List<Lancamento> lancamentos = new();
+List<Lancamento> lancamentos = [];
 
-app.MapPost("/fluxo-caixa/lancamentos", ([FromBody] Lancamento novoLancamento) =>
+// POST: Cria um novo lançamento (via RabbitMQ)
+app.MapPost("/fluxo-caixa/lancamentos", ([FromBody] Lancamento request) =>
 {
+    var novoLancamento = new Lancamento(contaId:request.ContaId, descricao:request.Descricao, tipo:request.Tipo, 
+                                        categoria:request.Categoria, data:request.Data, valor:request.Valor );
     // Gera um novo ID para o lançamento
-    novoLancamento.Id = Guid.NewGuid();
     rabbitMqProducer.Publish(new
     {
         Acao = "CriarLancamento",
         Lancamento = novoLancamento
     });
-    return Results.Created($"/fluxo-caixa/lancamentos/{novoLancamento.Id}", novoLancamento);
+    return Results.Ok(novoLancamento);
 });
 
-// GET: Lista todos os lançamentos (via RabbitMQ)
-app.MapGet("/fluxo-caixa/lancamentos", () => 
+// GET: Lista todos os lançamentos de uma conta (via DynamoDB)
+app.MapGet("/fluxo-caixa/lancamentos/{contaId}", async (string contaId, DynamoDbService dynamoDbService) =>
 {
-    try {
-        rabbitMqProducer.Publish(new
-        {
-            Acao = "ConsultarTodos"
-        });
-        return Results.Accepted("/fluxo-caixa/lancamentos", "Consulta de todos os lançamentos enviada.");
-    } catch (Exception ex) {
-        return Results.BadRequest(ex.Message);
-    }   
-
-});
-
-// GET: Consulta detalhes de um lançamento específico (via RabbitMQ)
-app.MapGet("/fluxo-caixa/lancamentos/{id:guid}", (Guid id) =>
-{
-    rabbitMqProducer.Publish(new
+    try
     {
-        Acao = "ConsultarPorId",
-        Id = id
-    });
-    return Results.Accepted($"/fluxo-caixa/lancamentos/{id}", $"Consulta do lançamento com ID {id} enviada.");
+        var lancamentos = await dynamoDbService.ObterLancamentosPorConta(contaId);
+        return Results.Ok(lancamentos);
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return Results.NotFound(ex.Message);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message);
+    }
+});
+
+// GET: Consulta detalhes de um lançamento específico de uma conta (via DynamoDB)
+app.MapGet("/fluxo-caixa/lancamentos/{contaId}/{lancamentoId:guid}", async (string contaId, Guid lancamentoId, DynamoDbService dynamoDbService) =>
+{
+    try
+    {
+        var lancamento = await dynamoDbService.ObterLancamentoPorId(contaId, lancamentoId);
+        if (lancamento == null)
+            return Results.NotFound($"Nenhum lançamento encontrado com o ID '{lancamentoId}' para a conta '{contaId}'.");
+        
+        return Results.Ok(lancamento);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message);
+    }
 });
 
 // PUT: Atualiza os dados de um lançamento específico
-app.MapPut("/fluxo-caixa/lancamentos/{id:guid}", ([FromBody] Lancamento updateLancamento, Guid id) =>
+app.MapPut("/fluxo-caixa/lancamentos", ([FromBody] Lancamento updateLancamento, Guid lancamentoId) =>
 {
     // Garante que o ID seja consistente
-    updateLancamento.Id = id;
+    updateLancamento.LancamentoId = lancamentoId;
     rabbitMqProducer.Publish(new
     {
         Acao = "AtualizarLancamento",
         Lancamento = updateLancamento
     });
-    return Results.Accepted($"/fluxo-caixa/lancamentos/{id}",$"Atualização do lançamento com ID {id} enviada.");
+    return Results.Ok($"Atualização do lançamento com ID {lancamentoId} enviada.");
 });
 
-app.MapDelete("/fluxo-caixa/lancamentos/{id:guid}", (Guid id) =>
+// DELETE: Remove um lançamento específico
+app.MapDelete("/fluxo-caixa/lancamentos/{contaId}/{lancamentoId:guid}", (string contaId, Guid lancamentoId) =>
 {
+    var removerLancamento = new Lancamento();
+    removerLancamento.LancamentoId= lancamentoId;
+    removerLancamento.ContaId = contaId;
     rabbitMqProducer.Publish(new
     {
         Acao = "DeletarLancamento",
-        Id = id
+        Lancamento =removerLancamento
     });
-    return Results.Accepted($"/fluxo-caixa/lancamentos/{id}",$"Remoção do lançamento com ID {id} enviada.");
+    return Results.Ok($"Remoção do lançamento com ID {lancamentoId} enviada.");
 });
 
 app.Run();

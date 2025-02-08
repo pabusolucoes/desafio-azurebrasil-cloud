@@ -29,7 +29,6 @@ public class DynamoDbService
 
             // 🔹 Configurar credenciais estáticas para evitar erro de IAM
             _client = new AmazonDynamoDBClient("fakeMyKeyId", "fakeSecretAccessKey", dynamoConfig);
-            _context = new DynamoDBContext(_client);
         }
         else
         {
@@ -41,8 +40,8 @@ public class DynamoDbService
 
             // 🔹 Configurar credenciais estáticas para evitar erro de IAM
             _client = new AmazonDynamoDBClient("fakeMyKeyId", "fakeSecretAccessKey", dynamoConfig);
-            _context = new DynamoDBContext(_client);
         }
+        _context = new DynamoDBContext(_client);
     }
 
     public async Task CriarTabelasSeNaoExistirem()
@@ -57,24 +56,23 @@ public class DynamoDbService
                 TableName = LancamentosTableName,
                 AttributeDefinitions = new List<AttributeDefinition>
                 {
-                    new AttributeDefinition { AttributeName = "ContaId", AttributeType = "S" },
-                    new AttributeDefinition { AttributeName = "LancamentoId", AttributeType = "S" },
-                    new AttributeDefinition { AttributeName = "Data", AttributeType = "S" }
+                    new() { AttributeName = "ContaId", AttributeType = "S" },
+                    new() { AttributeName = "LancamentoId", AttributeType = "S" },
+                    new() { AttributeName = "Data", AttributeType = "S" }
                 },
                 KeySchema = new List<KeySchemaElement>
                 {
-                    new KeySchemaElement { AttributeName = "ContaId", KeyType = "HASH" },
-                    new KeySchemaElement { AttributeName = "LancamentoId", KeyType = "RANGE" }
+                    new() { AttributeName = "ContaId", KeyType = "HASH" },
+                    new() { AttributeName = "LancamentoId", KeyType = "RANGE" }
                 },
                 GlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
                 {
-                    new GlobalSecondaryIndex
-                    {
+                    new() {
                         IndexName = "DataIndex",
                         KeySchema = new List<KeySchemaElement>
                         {
-                            new KeySchemaElement { AttributeName = "ContaId", KeyType = "HASH" },
-                            new KeySchemaElement { AttributeName = "Data", KeyType = "RANGE" }
+                            new() { AttributeName = "ContaId", KeyType = "HASH" },
+                            new() { AttributeName = "Data", KeyType = "RANGE" }
                         },
                         Projection = new Projection { ProjectionType = "ALL" },
                         ProvisionedThroughput = new ProvisionedThroughput { ReadCapacityUnits = 5, WriteCapacityUnits = 5 }
@@ -94,13 +92,13 @@ public class DynamoDbService
                 TableName = ConsolidadosTableName,
                 AttributeDefinitions = new List<AttributeDefinition>
                 {
-                    new AttributeDefinition { AttributeName = "ContaId", AttributeType = "S" },
-                    new AttributeDefinition { AttributeName = "Data", AttributeType = "S" }
+                    new() { AttributeName = "ContaId", AttributeType = "S" },
+                    new() { AttributeName = "Data", AttributeType = "S" }
                 },
                 KeySchema = new List<KeySchemaElement>
                 {
-                    new KeySchemaElement { AttributeName = "ContaId", KeyType = "HASH" },
-                    new KeySchemaElement { AttributeName = "Data", KeyType = "RANGE" }
+                    new() { AttributeName = "ContaId", KeyType = "HASH" },
+                    new() { AttributeName = "Data", KeyType = "RANGE" }
                 },
                 ProvisionedThroughput = new ProvisionedThroughput { ReadCapacityUnits = 5, WriteCapacityUnits = 5 }
             };
@@ -120,9 +118,22 @@ public class DynamoDbService
     {
         var conditions = new List<ScanCondition>
         {
-            new ScanCondition("ContaId", ScanOperator.Equal, contaId)
+            new("ContaId", ScanOperator.Equal, contaId)
         };
 
         return await _context.ScanAsync<Lancamento>(conditions).GetRemainingAsync();
     }
+    public async Task DeletarLancamento(string contaId, Guid lancamentoId)
+{
+    try
+    {
+        await _context.DeleteAsync<Lancamento>(contaId, lancamentoId);
+        Console.WriteLine($"[DynamoDB] Lançamento {lancamentoId} removido com sucesso.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Erro] Falha ao remover lançamento {lancamentoId}: {ex.Message}");
+        throw;
+    }
+}
 }

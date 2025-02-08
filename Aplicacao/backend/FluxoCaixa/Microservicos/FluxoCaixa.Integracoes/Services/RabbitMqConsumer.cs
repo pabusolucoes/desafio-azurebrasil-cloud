@@ -37,26 +37,41 @@ public class RabbitMqConsumer
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-            
+
             try
             {
-                var lancamento = JsonSerializer.Deserialize<Lancamento>(message);
+                // 🔹 Desserializa a mensagem completa (incluindo Ação e Lançamento)
+                var wrapper = JsonSerializer.Deserialize<MensagemLancamento>(message);
 
-                if (lancamento == null)
+                if (wrapper == null || string.IsNullOrEmpty(wrapper.Acao))
                 {
-                    Console.WriteLine("[Erro] Mensagem recebida inválida: Deserialização resultou em null.");
+                    Console.WriteLine($"[Erro] Mensagem inválida recebida: {message}");
                     return;
                 }
-                Console.WriteLine($"[x] Recebido e processado: {JsonSerializer.Serialize(lancamento)}");
 
-                // 🔹 Salvar no DynamoDB
-                await _dynamoDbService.SalvarLancamento(lancamento);
+                Console.WriteLine($"[x] Recebido: Ação: {wrapper.Acao} - Mensagem: {JsonSerializer.Serialize(wrapper.Lancamento)}");
+
+                if ((wrapper.Acao == "CriarLancamento" || wrapper.Acao == "AtualizarLancamento") && wrapper.Lancamento != null)
+                {
+                    await _dynamoDbService.SalvarLancamento(wrapper.Lancamento);
+                    Console.WriteLine($"[x] Ação: {wrapper.Acao} - Lançamento salvo/atualizado: {wrapper.Lancamento.LancamentoId}");
+                }
+                else if (wrapper.Acao == "DeletarLancamento" && wrapper.Lancamento != null)
+                {
+                    await _dynamoDbService.DeletarLancamento(wrapper.Lancamento.ContaId, wrapper.Lancamento.LancamentoId);
+                    Console.WriteLine($"[x] Ação: {wrapper.Acao} - Lançamento removido: {wrapper.Lancamento.LancamentoId}");
+                }
+                else
+                {
+                    Console.WriteLine($"[Aviso] Ação desconhecida recebida: {wrapper.Acao}");
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[Erro] Falha ao processar mensagem: {ex.Message}");
             }
         };
+
 
         channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
     }
