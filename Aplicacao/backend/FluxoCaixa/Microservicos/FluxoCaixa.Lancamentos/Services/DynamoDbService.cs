@@ -15,7 +15,7 @@ public class DynamoDbService
     private readonly ICustomEnvironment _env;
     private const string LancamentosTableName = "Lancamentos";
 
-    public DynamoDbService(ICustomEnvironment env)
+    public DynamoDbService(ICustomEnvironment env, DynamoDBContext? context = null)
     {
         _env = env;
 
@@ -41,7 +41,7 @@ public class DynamoDbService
             _client = new AmazonDynamoDBClient("fakeMyKeyId", "fakeSecretAccessKey", dynamoConfig);
         }
 
-        _context = new DynamoDBContext(_client);
+        _context = context ?? new DynamoDBContext(_client);
 
         // 🔹 Log de inicialização do serviço
         JsonLogger.Log("INFO", "DynamoDbService inicializado", new { Ambiente = _env.IsLocal() ? "Local" : "Produção" });
