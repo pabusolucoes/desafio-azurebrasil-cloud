@@ -3,7 +3,8 @@ using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
 using FluxoCaixa.Integracoes.Models;
-using FluxoCaixa.Integracoes.Extensions; // 🔹 Adicione essa linha para reconhecer a model
+using FluxoCaixa.Integracoes.Extensions;
+using FluxoCaixa.Integracoes.Shared; // 🔹 Importação do JsonLogger
 
 namespace FluxoCaixa.Integracoes.Services;
 
@@ -11,15 +12,18 @@ public class RabbitMqConsumer
 {
     private readonly string _queueName = "fluxo-caixa-queue";
     private readonly DynamoDbService _dynamoDbService;
-
     private readonly ICustomEnvironment _env;
 
     public RabbitMqConsumer(ICustomEnvironment env)
     {
         _env = env;
         _dynamoDbService = new DynamoDbService(_env);
+
+        JsonLogger.Log("INFO", "RabbitMqConsumer inicializado", new { Ambiente = _env.IsLocal() ? "Local" : "Produção" });
+
         _dynamoDbService.CriarTabelasSeNaoExistirem().Wait(); // 🔹 Criar a tabela ao iniciar o serviço
     }
+
     public void StartConsuming()
     {
         var factory = new ConnectionFactory() { HostName = "rabbitmq", UserName = "admin", Password = "admin" };
@@ -27,6 +31,7 @@ public class RabbitMqConsumer
         {
             factory = new ConnectionFactory() { HostName = "localhost", UserName = "admin", Password = "admin" };
         }
+
         var connection = factory.CreateConnection();
         var channel = connection.CreateModel();
 
@@ -45,33 +50,37 @@ public class RabbitMqConsumer
 
                 if (wrapper == null || string.IsNullOrEmpty(wrapper.Acao))
                 {
-                    Console.WriteLine($"[Erro] Mensagem inválida recebida: {message}");
+                    JsonLogger.Log("ERROR", "Mensagem inválida recebida", new { Mensagem = message });
                     return;
                 }
 
-                Console.WriteLine($"[x] Recebido: Ação: {wrapper.Acao} - Mensagem: {JsonSerializer.Serialize(wrapper.Lancamento)}");
+                JsonLogger.Log("INFO", "Mensagem recebida do RabbitMQ", new { Acao = wrapper.Acao, Lançamento = wrapper.Lancamento });
 
-                if ((wrapper.Acao == "CriarLancamento" || wrapper.Acao == "AtualizarLancamento") && wrapper.Lancamento != null)
+                if (wrapper.Acao == "ReprocessarConsolidado")
+                {
+                    await _dynamoDbService.ReprocessarConsolidado();
+                    JsonLogger.Log("INFO", "Reprocessamento solicitado");
+                }
+                else if ((wrapper.Acao == "CriarLancamento" || wrapper.Acao == "AtualizarLancamento") && wrapper.Lancamento != null)
                 {
                     await _dynamoDbService.SalvarLancamento(wrapper.Lancamento);
-                    Console.WriteLine($"[x] Ação: {wrapper.Acao} - Lançamento salvo/atualizado: {wrapper.Lancamento.LancamentoId}");
+                    JsonLogger.Log("INFO", "Lançamento salvo/atualizado", new { Acao = wrapper.Acao, LancamentoId = wrapper.Lancamento.LancamentoId });
                 }
                 else if (wrapper.Acao == "DeletarLancamento" && wrapper.Lancamento != null)
                 {
                     await _dynamoDbService.DeletarLancamento(wrapper.Lancamento.ContaId, wrapper.Lancamento.LancamentoId);
-                    Console.WriteLine($"[x] Ação: {wrapper.Acao} - Lançamento removido: {wrapper.Lancamento.LancamentoId}");
+                    JsonLogger.Log("INFO", "Lançamento removido", new { Acao = wrapper.Acao, LancamentoId = wrapper.Lancamento.LancamentoId });
                 }
                 else
                 {
-                    Console.WriteLine($"[Aviso] Ação desconhecida recebida: {wrapper.Acao}");
+                    JsonLogger.Log("WARN", "Ação desconhecida recebida", new { Acao = wrapper.Acao });
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Erro] Falha ao processar mensagem: {ex.Message}");
+                JsonLogger.Log("ERROR", "Falha ao processar mensagem", new { Erro = ex.Message, Mensagem = message });
             }
         };
-
 
         channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
     }

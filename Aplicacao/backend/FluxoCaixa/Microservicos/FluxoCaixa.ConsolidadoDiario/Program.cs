@@ -34,39 +34,6 @@ if (env.IsLocal())
 
 List<Lancamento> lancamentos = [];
 
-app.MapGet("/consolidado-diario", () =>
-{
-    var consolidado = lancamentos
-        .GroupBy(l => l.Data.Date)
-        .Select(g => new
-        {
-            Data = g.Key,
-            TotalDebitos = g.Where(l => l.Tipo == "DÉBITO").Sum(l => l.Valor),
-            TotalCreditos = g.Where(l => l.Tipo == "CRÉDITO").Sum(l => l.Valor),
-            Saldo = g.Sum(l => l.Tipo == "CRÉDITO" ? l.Valor : -l.Valor)
-        })
-        .ToList();
-
-    return Results.Ok(consolidado);
-});
-
-app.MapGet("/consolidado-diario/{data}", (DateTime data) =>
-{
-    var consolidado = lancamentos
-        .Where(l => l.Data.Date == data.Date)
-        .GroupBy(l => l.Data.Date)
-        .Select(g => new
-        {
-            Data = g.Key,
-            TotalDebitos = g.Where(l => l.Tipo == "DÉBITO").Sum(l => l.Valor),
-            TotalCreditos = g.Where(l => l.Tipo == "CRÉDITO").Sum(l => l.Valor),
-            Saldo = g.Sum(l => l.Tipo == "CRÉDITO" ? l.Valor : -l.Valor)
-        })
-        .FirstOrDefault();
-
-    return consolidado is not null ? Results.Ok(consolidado) : Results.NotFound();
-});
-
 app.MapPost("/consolidado-diario/reprocessar", () =>
 {
     var mensagem = new { Acao = "ReprocessarConsolidado" };
