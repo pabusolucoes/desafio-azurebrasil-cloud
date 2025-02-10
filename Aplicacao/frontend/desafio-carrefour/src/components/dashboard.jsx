@@ -1,130 +1,187 @@
-import  { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import { Lancamento } from "../models/Lancamento.js";
+import apiFluxoCaixa from "../services/apiFluxoCaixa";
 import TabelaLancamentos from "../components/tabelaLancamentos";
+
 import "../styles/dashboard.css";
 
 function Dashboard() {
   const navigate = useNavigate();
 
-  const [lancamentos, setLancamentos] = useState([]);
+  const logout = () => {
+    localStorage.removeItem("username"); // 🔹 Remove o usuário do localStorage
+    navigate("/"); // 🔹 Redireciona para a tela de login
+  };
+  const contaId = localStorage.getItem("username"); //Obtém o contaId do usuário logado
+
   const [filteredLancamentos, setFilteredLancamentos] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  const [filter, setFilter] = useState("");
 
-  const [form, setForm] = useState({
-    id: null,
-    data: "",
-    valor: "",
-    descricao: "",
-    tipo: "CRÉDITO",
-    categoria: "",
-  });
+  const [form, setForm] = useState(new Lancamento(contaId));
 
-  // Mock de lançamentos (para teste sem API)
-  const mockLancamentos = useMemo(() => [
-    { id: 1, data: "2025-02-01", valor: 100.5, descricao: "Compra supermercado", tipo: "DÉBITO", categoria: "Alimentação" },
-    { id: 2, data: "2025-02-01", valor: 20.0, descricao: "Padaria", tipo: "DÉBITO", categoria: "Alimentação" },
-    { id: 3, data: "2025-02-01", valor: 50.0, descricao: "Gasolina", tipo: "DÉBITO", categoria: "Transporte" },
-    { id: 4, data: "2025-02-02", valor: 200.0, descricao: "Salário", tipo: "CRÉDITO", categoria: "Renda" },
-    { id: 5, data: "2025-02-03", valor: 120.0, descricao: "Aluguel", tipo: "DÉBITO", categoria: "Moradia" },
-    { id: 6, data: "2025-02-03", valor: 45.0, descricao: "Farmácia", tipo: "DÉBITO", categoria: "Saúde" },
-    { id: 7, data: "2025-02-04", valor: 300.0, descricao: "Consultoria", tipo: "CRÉDITO", categoria: "Renda Extra" },
-    { id: 8, data: "2025-02-05", valor: 80.0, descricao: "Restaurante", tipo: "DÉBITO", categoria: "Entretenimento" },
-    { id: 9, data: "2025-02-05", valor: 35.0, descricao: "Cinema", tipo: "DÉBITO", categoria: "Entretenimento" },
-    { id: 10, data: "2025-02-06", valor: 25.0, descricao: "Café", tipo: "DÉBITO", categoria: "Alimentação" },
-    { id: 11, data: "2025-02-06", valor: 70.0, descricao: "Uber", tipo: "DÉBITO", categoria: "Transporte" },
-    { id: 12, data: "2025-02-07", valor: 150.0, descricao: "Mercado", tipo: "DÉBITO", categoria: "Alimentação" },
-    { id: 13, data: "2025-02-07", valor: 50.0, descricao: "Oficina", tipo: "DÉBITO", categoria: "Manutenção" },
-    { id: 14, data: "2025-02-08", valor: 40.0, descricao: "Livraria", tipo: "DÉBITO", categoria: "Educação" },
-    { id: 15, data: "2025-02-09", valor: 500.0, descricao: "Venda online", tipo: "CRÉDITO", categoria: "Renda Extra" },
-  ],[]);
-
-  // Evita re-renderizações desnecessárias
+  /**Busca os lançamentos da conta do usuário */
   const fetchLancamentos = useCallback(async () => {
+    if (!contaId) return;
     try {
-      const response = await api.get("/lancamentos");
-      setLancamentos(response.data);
-      setFilteredLancamentos(response.data);
-    } catch {
-      console.warn("API indisponível, usando mock.");
-      setLancamentos(mockLancamentos);
-      setFilteredLancamentos(mockLancamentos);
+      const response = await apiFluxoCaixa.get(`/fluxo-caixa/lancamentos/${contaId}`);
+  
+      // Garante que cada lançamento tenha um ID correto
+      const dataCorrigida = response.data.map(lanc => ({
+        ...lanc,
+        lancamentoId: lanc.lancamentoId || crypto.randomUUID(), // Se não tiver ID, gera um temporário
+      }));
+  
+      setFilteredLancamentos(dataCorrigida);
+    } catch (error) {
+      console.error("Erro ao buscar lançamentos:", error);
     }
-  }, [mockLancamentos]);
+  }, [contaId]);
 
   useEffect(() => {
     fetchLancamentos();
   }, [fetchLancamentos]);
 
-  // Apenas atualiza a lista filtrada sem re-renderizar o dashboard inteiro
-  useEffect(() => {
-    setFilteredLancamentos(
-      filter
-        ? lancamentos.filter((lanc) => lanc.tipo === filter || lanc.categoria === filter)
-        : lancamentos
-    );
-  }, [filter, lancamentos]);
-
-  const handleSort = (key) => {
-    let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
+  /**Criação de um novo lançamento */
+  const criarLancamento = async (e) => {
+    e.preventDefault();
+    try {
+      const { lancamentoId, ...dadosLancamento } = form; //Remove o `lancamentoId`
+  
+      await apiFluxoCaixa.post("/fluxo-caixa/lancamentos", {
+        ...dadosLancamento, // Envia apenas os dados sem `lancamentoId`
+        contaId, //Garante que o contaId seja incluído
+      });
+  
+      setTimeout(() => {fetchLancamentos();}, 500);  // Atualiza a tabela após a inclusão
+      
+      setForm(new Lancamento(contaId)); // Reseta o formulário mantendo o contaId
+    } catch (error) {
+      console.error("Erro ao criar lançamento:", error);
     }
-    setSortConfig({ key, direction });
+  };
 
-    setFilteredLancamentos((prev) =>
-      [...prev].sort((a, b) => {
-        if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
-        if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
-        return 0;
-      })
-    );
+  /**Atualização de um lançamento */
+const atualizarLancamento = async (e) => {
+  e.preventDefault();
+  if (!form.lancamentoId) return;
+
+  try {
+    // Garante que a data seja enviada no formato correto (YYYY-MM-DD)
+    const dataFormatada = form.data.split("T")[0];
+
+    await apiFluxoCaixa.put(`/fluxo-caixa/lancamentos?lancamentoId=${form.lancamentoId}`, { 
+      ...form, 
+      data: dataFormatada, //Converte antes de enviar
+      contaId 
+    });
+
+    setTimeout(() => {fetchLancamentos();}, 500); //Atualiza a grade após o update
+
+    setForm(new Lancamento(contaId)); //Reseta o formulário mantendo contaId
+  } catch (error) {
+    console.error("Erro ao atualizar lançamento:", error);
+  }
+};
+
+  /** Exclusão de um lançamento */
+  const excluirLancamento = async (id) => {
+    if (window.confirm("Tem certeza que deseja excluir este lançamento?")) {
+      try {
+        await apiFluxoCaixa.delete(`/fluxo-caixa/lancamentos/${contaId}/${id}`);
+        setTimeout(() => {fetchLancamentos();}, 500);
+      } catch (error) {
+        console.error("Erro ao excluir lançamento:", error);
+      }
+    }
+  };
+
+  /**Editar lançamento */
+  const editarLancamento = (lanc) => {
+    const dataFormatada = lanc.data.split("T")[0]; //Converte para "YYYY-MM-DD"
+  
+    setForm({
+      ...lanc,
+      data: dataFormatada, //Agora o input de data aceita o valor correto
+    });
   };
 
   return (
     <div className="dashboard-container">
-      <h1>Dashboard</h1>
-      <button
-        className="btn btn-secondary"
-        onClick={() => navigate("/relatorio")}
-      >
+      <div className="dashboard-header">
+        <h1>Dashboard</h1>
+        <button className="btn btn-danger logout-button" onClick={logout}>
+          🚪 Sair
+        </button>
+      </div>      
+      <button className="btn btn-secondary" onClick={() => navigate("/relatorio")}>
         📊 Relatório Consolidado
       </button>
-      {/* Filtro */}
-      <div className="filter-container">
-        <label>Filtrar por:</label>
-        <select onChange={(e) => setFilter(e.target.value)} value={filter}>
-          <option value="">Todos</option>
-          <option value="CRÉDITO">Crédito</option>
-          <option value="DÉBITO">Débito</option>
-          <option value="Alimentação">Alimentação</option>
-          <option value="Renda">Renda</option>
-          <option value="Transporte">Transporte</option>
-        </select>
-        {filter && <span className="filter-tag">{filter} ✖</span>}
-      </div>
 
-      {/* Formulário de lançamentos */}
-      <form className="form-lancamento" onSubmit={fetchLancamentos}>
-        <input type="date" value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })} required />
-        <input type="number" value={form.valor} onChange={(e) => setForm({ ...form, valor: e.target.value })} required placeholder="Valor" />
-        <input type="text" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} required placeholder="Descrição" />
+      {/*Formulário de lançamentos */}
+      <form className="form-lancamento" onSubmit={form.lancamentoId ? atualizarLancamento : criarLancamento}>
+        <input
+          type="date"
+          value={form.data}
+          onChange={(e) => setForm({ ...form, data: e.target.value })}
+          required
+        />
+        <input
+          type="number"
+          value={form.valor}
+          onChange={(e) => {
+            let valor = e.target.value.replace(",", "."); // Substitui ',' por '.'
+            valor = parseFloat(valor);
+            
+            if (isNaN(valor) || valor < 0) valor = 0; // Bloqueia negativos
+            setForm({ ...form, valor });
+          }}
+          step="0.01" // Permite casas decimais
+          min="0" // Bloqueia valores negativos
+          required
+          placeholder="Valor"
+        />
+        <input
+          type="text"
+          value={form.descricao}
+          onChange={(e) => setForm({ ...form, descricao: e.target.value })}
+          required
+          placeholder="Descrição"
+        />
         <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
           <option value="CRÉDITO">CRÉDITO</option>
           <option value="DÉBITO">DÉBITO</option>
         </select>
-        <input type="text" value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })} required placeholder="Categoria" />
-        <button type="submit" className="btn btn-primary">Salvar</button>
+        <input
+          type="text"
+          value={form.categoria}
+          onChange={(e) => setForm({ ...form, categoria: e.target.value })}
+          required
+          placeholder="Categoria"
+        />
+        <button type="submit" className="btn btn-primary">
+          {form.lancamentoId ? "Atualizar" : "Salvar"}
+        </button>
+        {form.lancamentoId && (
+          <button type="button" className="btn btn-warning" onClick={() => setForm(new Lancamento(contaId))}>
+            Cancelar Edição
+          </button>
+        )}
       </form>
 
-      {/* Grade de lançamentos separada */}
+      {/*Grade de lançamentos */}
       <TabelaLancamentos
         lancamentos={filteredLancamentos}
-        handleSort={handleSort}
+        handleSort={(key) => {
+          const direction = sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
+          setSortConfig({ key, direction });
+          setFilteredLancamentos((prev) =>
+            [...prev].sort((a, b) => (a[key] < b[key] ? (direction === "asc" ? -1 : 1) : a[key] > b[key] ? (direction === "asc" ? 1 : -1) : 0))
+          );
+        }}
         sortConfig={sortConfig}
-        handleEdit={setForm}
-        handleDelete={fetchLancamentos}
+        handleEdit={editarLancamento}
+        handleDelete={excluirLancamento}
       />
     </div>
   );

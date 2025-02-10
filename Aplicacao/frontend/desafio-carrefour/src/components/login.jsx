@@ -1,6 +1,6 @@
 import  { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import apiLogin from "../services/apiLogin";
 import "../styles/login.css"; // Estilos centralizados na pasta styles
 
 function Login() {
@@ -10,7 +10,7 @@ function Login() {
 
     // Mock de autenticação
     const mockAuthenticate = (username, password) => {
-        const MOCK_USER = "admin";
+        const MOCK_USER = "26492329864";
         const MOCK_PASSWORD = "123456";
     
         return username === MOCK_USER && password === MOCK_PASSWORD;
@@ -19,13 +19,16 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post("/login", { username, password });
+      const response = await apiLogin.post("/login", { username, password });
       localStorage.setItem("token", response.data.token);
+      localStorage.setItem("username", username);
+
       navigate("/dashboard");
     } catch {
         console.warn("API indisponível, usando mock para autenticação.");
         if (mockAuthenticate(username, password)) {
             localStorage.setItem("token", "mock_token");
+            localStorage.setItem("username", username);
             navigate("/dashboard");
         } else {
             alert("Usuário ou senha incorretos.");

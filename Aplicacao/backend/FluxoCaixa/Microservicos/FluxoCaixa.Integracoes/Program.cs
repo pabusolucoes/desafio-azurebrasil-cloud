@@ -6,6 +6,14 @@ using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder => builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
 // 🔹 Registrar Interfaces e Implementações
 builder.Services.AddSingleton<ICustomEnvironment, CustomEnvironment>();
 builder.Services.AddSingleton<IDynamoDbService, DynamoDbService>();
@@ -20,6 +28,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+app.UseCors(policy=>policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 // 🔹 Obtém o serviço injetado para verificar ambiente
 var env = app.Services.GetRequiredService<ICustomEnvironment>();
 

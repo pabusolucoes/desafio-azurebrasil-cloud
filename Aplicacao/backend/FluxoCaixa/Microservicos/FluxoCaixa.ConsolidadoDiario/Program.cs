@@ -6,7 +6,16 @@ using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder => builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
 // 🔹 Registra serviços para injeção de dependência
+builder.Services.AddSingleton<IDynamoDbService, DynamoDbService>();
 builder.Services.AddSingleton<ICustomEnvironment, CustomEnvironment>();
 
 // 🔹 Registra a fábrica de conexões do RabbitMQ considerando o ambiente
@@ -33,6 +42,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+app.UseCors(policy=>policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
 // 🔹 Obtém o serviço injetado para usar `IsLocal()`
 var env = app.Services.GetRequiredService<ICustomEnvironment>();
@@ -48,6 +58,24 @@ if (env.IsLocal() || env.IsDevelopment())
 }
 
 List<Lancamento> lancamentos = [];
+
+// 🔹 Endpoint para Buscar Consolidado por Período
+app.MapGet("/consolidado-diario", async (DateTime dataInicial, DateTime dataFinal, IDynamoDbService dynamoDbService) =>
+{
+    try
+    {
+        var consolidados = await dynamoDbService.ObterConsolidadoPorPeriodo(dataInicial, dataFinal);
+        return Results.Ok(consolidados);
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return Results.NotFound(ex.Message);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message);
+    }
+});
 
 // 🔹 Endpoint de Reprocessamento do Consolidado Diário
 app.MapPost("/consolidado-diario/reprocessar", (IRabbitMqProducer rabbitMqProducer) =>

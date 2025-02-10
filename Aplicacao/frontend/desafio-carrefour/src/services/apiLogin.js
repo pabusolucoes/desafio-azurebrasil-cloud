@@ -1,10 +1,11 @@
 import axios from "axios";
+import { API_LOGIN } from "../config";
 
-const api = axios.create({
-  baseURL: "https://sua-api.com", // Substitua pela URL base
+const apiLogin = axios.create({
+  baseURL: API_LOGIN,
 });
 
-api.interceptors.request.use((config) => {
+apiLogin.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -12,4 +13,4 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export default api;
+export default apiLogin;

@@ -165,4 +165,51 @@
     content: " ▼";
     color: #4e73df;
   }
-  
+/* Estilo para o input de data */
+input[type="date"] {
+  appearance: none; /* Remove o estilo padrão do input */
+  -webkit-appearance: none; /* Remove o estilo padrão no WebKit */
+  background-color: #f8f9fc; /* Fundo do input */
+  border: 1px solid #d1d3e2; /* Borda padrão */
+  border-radius: 4px; /* Bordas arredondadas */
+  padding: 10px;
+  color: #333; /* Cor do texto */
+  font-size: 14px;
+  position: relative; /* Necessário para posicionar o ícone */
+}
+
+/* Adiciona um ícone de calendário personalizado */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 10px; /* Distância do lado direito */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: black; /* Define a cor preta para o ícone */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23000' viewBox='0 0 24 24'%3E%3Cpath d='M19 3h-1V1h-2v2H8V1H6v2H5C3.89 3 3 3.89 3 5v15c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zM5 20V9h14v11H5z'%3E%3C/path%3E%3C/svg%3E")
+    no-repeat;
+  background-size: contain;
+  border: none;
+  cursor: pointer;
+  opacity: 1; /* Garante que o ícone esteja visível */
+}
+/* 🔹 Header do Dashboard */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+/* 🔹 Botão de Logout */
+.logout-button {
+  background-color: #e74a3b;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.logout-button:hover {
+  background-color: #c0392b;
+}
