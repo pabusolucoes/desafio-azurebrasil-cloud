@@ -8,7 +8,7 @@ using FluxoCaixa.Integracoes.Shared; // 🔹 Importação do JsonLogger
 
 namespace FluxoCaixa.Integracoes.Services;
 
-public class RabbitMqConsumer
+public class RabbitMqConsumer: IRabbitMqConsumer
 {
     private readonly string _queueName = "fluxo-caixa-queue";
     private readonly DynamoDbService _dynamoDbService;
@@ -85,3 +85,4 @@ public class RabbitMqConsumer
         channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
     }
 }
+

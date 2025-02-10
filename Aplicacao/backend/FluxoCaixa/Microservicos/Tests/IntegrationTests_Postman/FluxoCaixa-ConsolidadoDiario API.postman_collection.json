@@ -1,0 +1,499 @@
+{
+	"info": {
+		"_postman_id": "1a6b8c30-6f76-4091-b7cf-2d8fde5846cb",
+		"name": "FluxoCaixa-ConsolidadoDiario API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3359381"
+	},
+	"item": [
+		{
+			"name": "ConsolidadoDiario",
+			"item": [
+				{
+					"name": "Reprocessar Consolidado Diário",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verifica se a resposta foi bem-sucedida (código 200 ou 201)\r",
+									"pm.test(\"Resposta deve ser 200 ou 201\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+									"});\r",
+									"\r",
+									"// Verifica se a resposta está no formato JSON\r",
+									"pm.test(\"Resposta deve estar no formato JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									"\r",
+									"// Teste de tempo de resposta\r",
+									"pm.test(\"Tempo de resposta deve ser menor que 1 segundo\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Reprocessamento deve iniciar com sucesso\", function () {\r",
+									"    pm.expect(pm.response.code).to.equal(200);\r",
+									"    \r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.equal(\"Reprocessamento iniciado.\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"strictSSL": false
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{schema}}://{{host}}:{{port_consolidadodiario}}/consolidado-diario/reprocessar",
+							"protocol": "{{schema}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port_consolidadodiario}}",
+							"path": [
+								"consolidado-diario",
+								"reprocessar"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Integracoes",
+			"item": [
+				{
+					"name": "Integracoes_swagger",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Resposta Code 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.equal(200);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"// Teste de tempo de resposta\r",
+									"pm.test(\"Tempo de resposta deve ser menor que 1 segundo\", function () {\r",
+									"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"Resposta deve ter tags html\", function () {\r",
+									"    const responseData = pm.response.text();\r",
+									"\r",
+									"    pm.expect(responseData).to.include(\"<head>\").and.to.include(\"<body>\").and.to.include(\"<title>\");\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"Content deve ser 'text/html'\", function () {\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/html\");\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"Presença de links específicos na seção de cabeçalho HTML\", function () {\r",
+									"    const responseData = pm.response.text();\r",
+									"    \r",
+									"    pm.expect(responseData).to.include('<link rel=\"stylesheet\" type=\"text/css\" href=\"./swagger-ui.css\">');\r",
+									"    pm.expect(responseData).to.include('<link rel=\"stylesheet\" type=\"text/css\" href=\"./index.css\">');\r",
+									"    pm.expect(responseData).to.include('<link rel=\"icon\" type=\"image/png\" href=\"./favicon-32x32.png\" sizes=\"32x32\" />');\r",
+									"    pm.expect(responseData).to.include('<link rel=\"icon\" type=\"image/png\" href=\"./favicon-16x16.png\" sizes=\"16x16\" />');\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{schema}}://{{host}}:{{port_integracoes}}/index.html",
+							"protocol": "{{schema}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port_integracoes}}",
+							"path": [
+								"index.html"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Integracoes_Reprocessar",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Configuração de cenários de testes para o mesmo endpoint\r",
+									"const testCases = [\r",
+									"    { query: \"\", expectedStatus: 200, expectedMessage: \"Reprocessamento iniciado\", message: \"Reprocessamento sem data deve ser aceito\" },\r",
+									"    { query: \"?dataInicio=2025-02-08&dataFim=2025-02-10\", expectedStatus: 200, expectedMessage: \"Reprocessamento iniciado\", message: \"Reprocessamento com datas válidas\" },\r",
+									"    { query: \"?dataInicio=2025-02-10&dataFim=2025-02-08\", expectedStatus: 400, expectedMessage: \"A data inicial não pode ser maior que a data final.\", message: \"❌ Deve falhar (Data inicial maior que final)\" },\r",
+									"    { query: \"?dataInicio=08/02/2025\", expectedStatus: 400, expectedMessage: \"Formato de data inválido.\", message: \"❌ Deve falhar (Formato de data inválido)\" },\r",
+									"    { query: \"?dataInicio=2025-02-08\", expectedStatus: 200, expectedMessage: \"Reprocessamento iniciado\", message: \"Reprocessamento apenas com data de início\" },\r",
+									"    { query: \"?dataFim=2025-02-10\", expectedStatus: 200, expectedMessage: \"Reprocessamento iniciado\", message: \"Reprocessamento apenas com data de fim\" }\r",
+									"\r",
+									"];\r",
+									"\r",
+									"// Testando cada cenário dinamicamente\r",
+									"testCases.forEach((testCase) => {\r",
+									"    pm.sendRequest({\r",
+									"        url: pm.request.url.toString() + testCase.query,\r",
+									"        method: \"POST\"\r",
+									"    }, function (err, res) {\r",
+									"        pm.test(testCase.message, function () {\r",
+									"            pm.expect(res.code).to.eql(testCase.expectedStatus);\r",
+									"        });\r",
+									"\r",
+									"        if (res.status === 400) {\r",
+									"            pm.test(\"❌ Verificar mensagem de erro\", function () {\r",
+									"                var jsonData = res.json();\r",
+									"                pm.expect(jsonData.erro).to.be.a(\"string\");\r",
+									"            });\r",
+									"        }\r",
+									"    });\r",
+									"});\r",
+									"// Teste de tempo de resposta\r",
+									"pm.test(\"Tempo de resposta deve ser menor que 1 segundo\", function () {\r",
+									"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});\r",
+									"// Verifica se a resposta está no formato JSON\r",
+									"pm.test(\"Resposta deve estar no formato JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.response.to.be.json;\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{schema}}://{{host}}:{{port_integracoes}}/integracoes/reprocessar",
+							"protocol": "{{schema}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port_integracoes}}",
+							"path": [
+								"integracoes",
+								"reprocessar"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Lancamentos",
+			"item": [
+				{
+					"name": "Lancamentos_Incluir",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 200 - Criado com sucesso\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Retorna um objeto com ContaId/LancamentoId preenchido\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"lancamentoId\").that.is.not.empty;\r",
+									"    pm.expect(jsonData).to.have.property(\"contaId\").that.is.not.empty;\r",
+									"    // 🔹 Armazena o ContaId/LancamentoId em variáveis globais\r",
+									"    pm.globals.set(\"ContaId\", jsonData.contaId);\r",
+									"    pm.globals.set(\"LancamentoId\", jsonData.lancamentoId);\r",
+									"    console.log(\"ContaId salvo:\", jsonData.contaId);\r",
+									"    console.log(\"LancamentoId salvo:\", jsonData.lancamentoId);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"// ----------------------------------------------------\r",
+									"// 🔹 EXECUTA TESTES NEGATIVOS DENTRO DO SCRIPT\r",
+									"// ----------------------------------------------------\r",
+									"\r",
+									"var schema = pm.environment.get(\"schema\");\r",
+									"var host = pm.environment.get(\"host\");\r",
+									"var porta = pm.environment.get(\"port_lancamento\")\r",
+									"\r",
+									"var apiBaseUrl = `${schema}://${host}:${porta}/fluxo-caixa/lancamentos`;\r",
+									"var contaId = \"999999\"; // Usa um ID inválido se não existir\r",
+									"var lancamentoId = \"00000000-0000-0000-0000-000000000000\";\r",
+									"\r",
+									"// 🔹 Teste 2: Buscar lançamentos com conta inexistente (deve retornar 404)\r",
+									"pm.sendRequest({\r",
+									"    url: apiBaseUrl + \"/000000\",\r",
+									"    method: \"GET\"\r",
+									"}, function (err, res) {\r",
+									"    pm.test(\"Deve retornar 404 para conta inexistente\", function () {\r",
+									"        console.log(\"Code: \", res.code);\r",
+									"        pm.expect(res.code).to.equal(404);\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"// 🔹 Teste 3: Buscar um lançamento inexistente (deve retornar 404)\r",
+									"pm.sendRequest({\r",
+									"    url: apiBaseUrl + \"/\" + contaId + \"/00000000-0000-0000-0000-000000000000\",\r",
+									"    method: \"GET\"\r",
+									"}, function (err, res) {\r",
+									"    pm.test(\"Deve retornar 404 para lançamento inexistente\", function () {\r",
+									"        console.log(\"Codigo: \", res.code);\r",
+									"        pm.expect(res.code).to.equal(404);\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"contaId\": \"123456\",\r\n    \"descricao\": \"Compra no supermercado\",\r\n    \"tipo\": \"DÉBITO\",\r\n    \"categoria\": \"Alimentação\",\r\n    \"data\": \"2025-02-10T12:00:00Z\",\r\n    \"valor\": 150.50\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{schema}}://{{host}}:{{port_lancamento}}/fluxo-caixa/lancamentos",
+							"protocol": "{{schema}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port_lancamento}}",
+							"path": [
+								"fluxo-caixa",
+								"lancamentos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lancamento_Get_Lancamento_by_ContaId_e_LancamentoId",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 200 - Retorna detalhes do lançamento\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"O objeto contém os campos esperados\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.all.keys(\"contaId\", \"lancamentoId\", \"descricao\", \"tipo\", \"categoria\", \"data\", \"valor\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{schema}}://{{host}}:{{port_lancamento}}/fluxo-caixa/lancamentos/123456/{{LancamentoId}}",
+							"protocol": "{{schema}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port_lancamento}}",
+							"path": [
+								"fluxo-caixa",
+								"lancamentos",
+								"123456",
+								"{{LancamentoId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lancamento_Atualizar_Lancamento",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 200 - Atualização enviada\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Mensagem de sucesso foi retornada\", function () {\r",
+									"    pm.expect(responseBody).to.include(\"Atualização do lançamento com ID\"); // Verifica se a mensagem está presente\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"contaId\": \"123456\",\r\n    \"descricao\": \"Compra ajustada\",\r\n    \"tipo\": \"DÉBITO\",\r\n    \"categoria\": \"Alimentação\",\r\n    \"data\": \"2025-02-10T12:00:00Z\",\r\n    \"valor\": 121.00\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{schema}}://{{host}}:{{port_lancamento}}/fluxo-caixa/lancamentos?lancamentoId={{LancamentoId}}",
+							"protocol": "{{schema}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port_lancamento}}",
+							"path": [
+								"fluxo-caixa",
+								"lancamentos"
+							],
+							"query": [
+								{
+									"key": "lancamentoId",
+									"value": "{{LancamentoId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deletar_Lançamento",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 200 - Remoção enviada\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Mensagem de sucesso foi retornada\", function () {\r",
+									"    pm.expect(responseBody).to.include(\"Remoção do lançamento com ID\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{schema}}://{{host}}:{{port_lancamento}}/fluxo-caixa/lancamentos/{{ContaId}}/{{LancamentoId}}",
+							"protocol": "{{schema}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port_lancamento}}",
+							"path": [
+								"fluxo-caixa",
+								"lancamentos",
+								"{{ContaId}}",
+								"{{LancamentoId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lancamento_Get_Lancamento_by_ContaId",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Resposta deve ter status 200 OK\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Resposta deve ser um array de lançamentos\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.be.an(\"array\"); // Verifica se a resposta é um array\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Resposta contém pelo menos um lançamento (se existir no banco)\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.length).to.be.at.least(1); // Espera pelo menos um lançamento\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{schema}}://{{host}}:{{port_lancamento}}/fluxo-caixa/lancamentos/{{ContaId}}",
+							"protocol": "{{schema}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port_lancamento}}",
+							"path": [
+								"fluxo-caixa",
+								"lancamentos",
+								"{{ContaId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

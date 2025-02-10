@@ -6,12 +6,12 @@ using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<DynamoDbService>();
-
-// Registra o ICustomEnvironment para ser injetado em toda aplicação
+// 🔹 Registrar Interfaces e Implementações
 builder.Services.AddSingleton<ICustomEnvironment, CustomEnvironment>();
+builder.Services.AddSingleton<IDynamoDbService, DynamoDbService>();
+builder.Services.AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>();
 
-// Adiciona serviços do Swagger
+// 🔹 Configuração do Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -20,26 +20,26 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Obtém o serviço injetado para usar `IsLocal()`
+// 🔹 Obtém o serviço injetado para verificar ambiente
 var env = app.Services.GetRequiredService<ICustomEnvironment>();
 
-// Configura o Swagger no pipeline de middleware
-if (env.IsLocal())
+// 🔹 Configuração do Swagger se estiver rodando localmente
+if (env.IsLocal() || env.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Fluxo de Caixa-Integrações API V1");
-        c.RoutePrefix = "";  // Deixa o Swagger disponível na raiz "/"
+        c.RoutePrefix = "";  // 🔹 Deixa o Swagger disponível na raiz "/"
     });
 }
 
-
-var rabbitMqConsumer = new RabbitMqConsumer(env);
+// 🔹 Obtém a instância do consumidor RabbitMQ e inicia o consumo
+var rabbitMqConsumer = app.Services.GetRequiredService<IRabbitMqConsumer>();
 await Task.Run(() => rabbitMqConsumer.StartConsuming());
 
-// Obtém o serviço de DynamoDB
-var dynamoDbService = app.Services.GetRequiredService<DynamoDbService>();
+// 🔹 Obtém a instância do serviço DynamoDB
+var dynamoDbService = app.Services.GetRequiredService<IDynamoDbService>();
 
 // 🔹 Endpoint para reprocessar consolidado por dia, período ou tudo
 app.MapPost("/integracoes/reprocessar", async ([FromQuery] string? dataInicio, [FromQuery] string? dataFim) =>
@@ -87,8 +87,7 @@ app.MapPost("/integracoes/reprocessar", async ([FromQuery] string? dataInicio, [
     }
 });
 
-
-
+// 🔹 Executa a aplicação
 await app.RunAsync();
 
 record MensagemFila(Guid Id, string Conteudo);

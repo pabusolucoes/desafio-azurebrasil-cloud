@@ -8,7 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Registra o ICustomEnvironment para ser injetado em toda aplicação
 builder.Services.AddSingleton<ICustomEnvironment, CustomEnvironment>();
-builder.Services.AddSingleton<DynamoDbService>();
+builder.Services.AddSingleton<IDynamoDbService,DynamoDbService>();
+builder.Services.AddSingleton<IRabbitMqProducer, RabbitMqProducer>();
 
 // Adiciona serviços do Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -22,9 +23,9 @@ var app = builder.Build();
 // Obtém o serviço injetado para usar `IsLocal()`
 var env = app.Services.GetRequiredService<ICustomEnvironment>();
 
-var rabbitMqProducer = new RabbitMqProducer(env);
+//var rabbitMqProducer = new RabbitMqProducer(env);
 
-if (env.IsLocal()) 
+if (env.IsLocal() || env.IsDevelopment()) 
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
@@ -37,7 +38,7 @@ if (env.IsLocal())
 List<Lancamento> lancamentos = [];
 
 // POST: Cria um novo lançamento (via RabbitMQ)
-app.MapPost("/fluxo-caixa/lancamentos", ([FromBody] Lancamento request) =>
+app.MapPost("/fluxo-caixa/lancamentos", ([FromBody] Lancamento request, IRabbitMqProducer rabbitMqProducer) =>
 {
     var novoLancamento = new Lancamento(contaId:request.ContaId, descricao:request.Descricao, tipo:request.Tipo, 
                                         categoria:request.Categoria, data:request.Data, valor:request.Valor );
@@ -51,7 +52,7 @@ app.MapPost("/fluxo-caixa/lancamentos", ([FromBody] Lancamento request) =>
 });
 
 // GET: Lista todos os lançamentos de uma conta (via DynamoDB)
-app.MapGet("/fluxo-caixa/lancamentos/{contaId}", async (string contaId, DynamoDbService dynamoDbService) =>
+app.MapGet("/fluxo-caixa/lancamentos/{contaId}", async (string contaId, IDynamoDbService dynamoDbService) =>
 {
     try
     {
@@ -69,7 +70,7 @@ app.MapGet("/fluxo-caixa/lancamentos/{contaId}", async (string contaId, DynamoDb
 });
 
 // GET: Consulta detalhes de um lançamento específico de uma conta (via DynamoDB)
-app.MapGet("/fluxo-caixa/lancamentos/{contaId}/{lancamentoId:guid}", async (string contaId, Guid lancamentoId, DynamoDbService dynamoDbService) =>
+app.MapGet("/fluxo-caixa/lancamentos/{contaId}/{lancamentoId:guid}", async (string contaId, Guid lancamentoId, IDynamoDbService dynamoDbService) =>
 {
     try
     {
@@ -79,6 +80,10 @@ app.MapGet("/fluxo-caixa/lancamentos/{contaId}/{lancamentoId:guid}", async (stri
         
         return Results.Ok(lancamento);
     }
+    catch (KeyNotFoundException ex)
+    {
+        return Results.NotFound(ex.Message);
+    }
     catch (Exception ex)
     {
         return Results.Problem(ex.Message);
@@ -86,7 +91,7 @@ app.MapGet("/fluxo-caixa/lancamentos/{contaId}/{lancamentoId:guid}", async (stri
 });
 
 // PUT: Atualiza os dados de um lançamento específico
-app.MapPut("/fluxo-caixa/lancamentos", ([FromBody] Lancamento updateLancamento, Guid lancamentoId) =>
+app.MapPut("/fluxo-caixa/lancamentos", ([FromBody] Lancamento updateLancamento, Guid lancamentoId, IRabbitMqProducer rabbitMqProducer) =>
 {
     // Garante que o ID seja consistente
     updateLancamento.LancamentoId = lancamentoId;
@@ -99,7 +104,7 @@ app.MapPut("/fluxo-caixa/lancamentos", ([FromBody] Lancamento updateLancamento, 
 });
 
 // DELETE: Remove um lançamento específico
-app.MapDelete("/fluxo-caixa/lancamentos/{contaId}/{lancamentoId:guid}", (string contaId, Guid lancamentoId) =>
+app.MapDelete("/fluxo-caixa/lancamentos/{contaId}/{lancamentoId:guid}", (string contaId, Guid lancamentoId, IRabbitMqProducer rabbitMqProducer) =>
 {
     var removerLancamento = new Lancamento();
     removerLancamento.LancamentoId= lancamentoId;
@@ -114,3 +119,4 @@ app.MapDelete("/fluxo-caixa/lancamentos/{contaId}/{lancamentoId:guid}", (string 
 
 app.Run();
 public partial class Program { }
+

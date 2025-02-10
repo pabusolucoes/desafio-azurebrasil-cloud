@@ -6,36 +6,17 @@ using System.Text.Json;
 
 namespace FluxoCaixa.ConsolidadoDiario.Services;
 
-public class RabbitMqProducer
+public class RabbitMqProducer:IRabbitMqProducer
 {
     private readonly string _queueName = "fluxo-caixa-queue";
-    private readonly ConnectionFactory _factory;
+    private readonly IConnectionFactory  _factory;
     private readonly ICustomEnvironment _env;
 
-    public RabbitMqProducer(ICustomEnvironment env)
+        public RabbitMqProducer(ICustomEnvironment env, IConnectionFactory factory)
     {
         _env = env;
+        _factory = factory;
 
-        if (_env.IsLocal())
-        {
-            _factory = new ConnectionFactory
-            {
-                HostName = "localhost",
-                UserName = "admin",
-                Password = "admin"
-            };
-        }
-        else
-        {
-            _factory = new ConnectionFactory
-            {
-                HostName = "rabbitmq",
-                UserName = "admin",
-                Password = "admin"
-            };
-        }
-
-        // 🔹 Loga a inicialização do RabbitMqProducer
         JsonLogger.Log("INFO", "RabbitMqProducer inicializado", new { Ambiente = _env.IsLocal() ? "Local" : "Produção" });
     }
 

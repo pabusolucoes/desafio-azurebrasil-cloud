@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace FluxoCaixa.Lancamentos.Services;
 
-public class RabbitMqProducer
+public class RabbitMqProducer:IRabbitMqProducer
 {
     private readonly string _queueName = "fluxo-caixa-queue";
     private readonly ConnectionFactory _factory;

@@ -8,7 +8,7 @@ using FluxoCaixa.Lancamentos.Shared;
 
 namespace FluxoCaixa.Lancamentos.Services;
 
-public class DynamoDbService
+public class DynamoDbService:IDynamoDbService
 {
     private readonly AmazonDynamoDBClient _client;
     private readonly DynamoDBContext _context;
