@@ -97,11 +97,11 @@ A aplicação **Fluxo de Caixa** gerencia lançamentos financeiros, consolidando
 - Comunicação assíncrona via **RabbitMQ**.
 - Serviços desacoplados rodando em containers locais.
 
-<img src="structurizr-99540-ContextDiagram.png" width="300px"/>
+<img src="Arquitetura/structurizr-99540-ContextDiagram.png" width="300px"/>
 
-<img src="structurizr-99525-ContainerDiagram.svg" width="600px"/>
+<img src="Arquitetura/structurizr-99525-ContainerDiagram.svg" width="600px"/>
 
-<img src="structurizr-99525-ComponentDiagram.svg" width="600px" />
+<img src="Arquitetura/structurizr-99525-ComponentDiagram.svg" width="600px" />
 
 ### 🔄 Arquitetura Base
 
@@ -110,11 +110,11 @@ A aplicação **Fluxo de Caixa** gerencia lançamentos financeiros, consolidando
 - Banco de dados **DynamoDB gerenciado na AWS**.
 - **API Gateway** gerenciando chamadas entre serviços.
 
-<img src="structurizr-base-ContextDiagram.svg" width="300px"/>
+<img src="Arquitetura/structurizr-base-ContextDiagram.svg" width="300px"/>
 
-<img src="structurizr-99540-ContainerDiagram.png" width="800px"/>
+<img src="Arquitetura/structurizr-99540-ContainerDiagram.png" width="800px"/>
 
-<img src="structurizr-99540-ComponentDiagram.png" width="800px"/>
+<img src="Arquitetura/structurizr-99540-ComponentDiagram.png" width="800px"/>
 
 ### 🚀 Arquitetura Final
 
@@ -125,11 +125,11 @@ A aplicação **Fluxo de Caixa** gerencia lançamentos financeiros, consolidando
 - **CloudWatch** para logs e monitoramento.
 - Comunicação assíncrona otimizada entre serviços.
 
-<img src="structurizr-final-ContextDiagram.png" width="300px" />
+<img src="Arquitetura/structurizr-final-ContextDiagram.png" width="300px" />
 
-<img src="structurizr-final-ContainerDiagram.png" width="800px"/>
+<img src="Arquitetura/structurizr-final-ContainerDiagram.png" width="800px"/>
 
-<img src="structurizr-final-ComponentDiagram.png" width="600px"/>
+<img src="Arquitetura/structurizr-final-ComponentDiagram.png" width="600px"/>
 
 
 
@@ -337,37 +337,43 @@ Exemplo:
 
 - ### Técnicos
 
-[Documento Técnico Front-End](../Aplicacao/frontend/documentos/Documentação%20do%20Front-End%20-%20Fluxo%20de%20Caixa.md)
+[Documento Técnico Front-End](Aplicacao/frontend/documentos/Documentação%20do%20Front-End%20-%20Fluxo%20de%20Caixa.md)
 
-[Requisitos do Sistema BackEnd](../Aplicacao/backend/documentacao/Requisitos%20do%20Sistema%20BackEnd.md)
+[Requisitos do Sistema BackEnd](Aplicacao/backend/documentacao/Requisitos%20do%20Sistema%20BackEnd.md)
 
-[Docker Postman Environment](../Aplicacao/backend/FluxoCaixa/Microservicos/Tests/IntegrationTests_Postman/Docker.postman_environment.json)
+[Docker Postman Environment](Aplicacao/backend/FluxoCaixa/Microservicos/Tests/IntegrationTests_Postman/Docker.postman_environment.json)
 
-[FluxoCaixa-ConsolidadoDiario API Postman Collection](../Aplicacao/backend/FluxoCaixa/Microservicos/Tests/IntegrationTests_Postman/FluxoCaixa-ConsolidadoDiario%20API.postman_collection.json)
+[FluxoCaixa-ConsolidadoDiario API Postman Collection](Aplicacao/backend/FluxoCaixa/Microservicos/Tests/IntegrationTests_Postman/FluxoCaixa-ConsolidadoDiario%20API.postman_collection.json)
 
-[Local Postman Environment](../Aplicacao/backend/FluxoCaixa/Microservicos/Tests/IntegrationTests_Postman/Local.postman_environment.json)
+[Local Postman Environment](Aplicacao/backend/FluxoCaixa/Microservicos/Tests/IntegrationTests_Postman/Local.postman_environment.json)
 
-### Manuais
+- ### Manuais
 
-[Manual Front-End](../Aplicacao/frontend/desafio-carrefour/README.md)
 
-[Microserviço - FluxoCaixa.Autenticacao](../Aplicacao/backend/documentacao/Microserviço%20-%20FluxoCaixa.Autenticacao.md)
+[Manual Front-End](Aplicacao/frontend/desafio-carrefour/README.md)
 
-[Microserviço - FluxoCaixa.ConsolidadoDiario](../Aplicacao/backend/documentacao/Microserviço%20-%20FluxoCaixa.ConsolidadoDiario.md)
+[Microserviço - FluxoCaixa.Autenticacao](Aplicacao/backend/documentacao/Microserviço%20-%20FluxoCaixa.Autenticacao.md)
 
-[Microserviço - FluxoCaixa.Integracoes](../Aplicacao/backend/documentacao/Microserviço%20-%20FluxoCaixa.Integracoes.md)
+[Microserviço - FluxoCaixa.ConsolidadoDiario](Aplicacao/backend/documentacao/Microserviço%20-%20FluxoCaixa.ConsolidadoDiario.md)
 
-[Microserviço - FluxoCaixa.Lancamentos](../Aplicacao/backend/documentacao/Microserviço%20-%20FluxoCaixa.Lancamentos.md)
+[Microserviço - FluxoCaixa.Integracoes](Aplicacao/backend/documentacao/Microserviço%20-%20FluxoCaixa.Integracoes.md)
 
-### Outros
+[Microserviço - FluxoCaixa.Lancamentos](Aplicacao/backend/documentacao/Microserviço%20-%20FluxoCaixa.Lancamentos.md)
 
-[Desafio Carrefour - Extensão - Calculadora de Preços da AWS](../infraestrutura/Desafio%20Carrefour%20-%20Extensão%20-%20Calculadora%20de%20Preços%20da%20AWS.pdf)
+- ### Outros
 
-[Arquitetura Docker dsl](Arquitetura_Docker.dsl)
 
-[Arquitetura Base dsl](Arquitetura_Base.dsl)
+[Desafio Carrefour - Extensão - Calculadora de Preços da AWS](infraestrutura/Desafio%20Carrefour%20-%20Extensão%20-%20Calculadora%20de%20Preços%20da%20AWS.pdf)
 
-[Arquitetura Final dsl](Arquitetura_Final.dsl)
+[Arquitetura Docker dsl](Arquitetura/Arquitetura_Docker.dsl)
+
+[Arquitetura Base dsl](Arquitetura/Arquitetura_Base.dsl)
+
+[Arquitetura Final dsl](Arquitetura/Arquitetura_Final.dsl)
+
+[Desafio Arquiteto](desafio-arquiteto-solucao-ago2024.pdf)
+
+[Estrutura do Projeto Git](estrutura_projeto.txt)
 
 
 
