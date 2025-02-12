@@ -1,0 +1,45 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Autenticador",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.Autenticacao\\FluxoCaixa.Autenticacao.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Lançamentos",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.Lancamentos\\FluxoCaixa.Lancamentos.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Consolidado Diário",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.ConsolidadoDiario\\FluxoCaixa.ConsolidadoDiario.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Integrações",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.Integracoes\\FluxoCaixa.Integracoes.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}
