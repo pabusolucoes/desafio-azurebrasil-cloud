@@ -4,11 +4,54 @@ import { Lancamento } from "../models/Lancamento.js";
 import { getSecureItem } from "../services/storageHelper";
 import apiFluxoCaixa from "../services/apiFluxoCaixa";
 import TabelaLancamentos from "../components/tabelaLancamentos";
+import { API_FLUXO_CAIXA, API_RELATORIO, API_AUTENTICACAO, API_INTEGRACAO } from "../config";
 
 import "../styles/dashboard.css";
 
 function Dashboard() {
   const navigate = useNavigate();
+
+  // Estados para monitorar disponibilidade dos microserviços
+  const [fluxoCaixaOnline, setFluxoCaixaOnline] = useState(false);
+  const [relatorioOnline, setRelatorioOnline] = useState(false);
+  const [autenticacaoOnline, setAutenticacaoOnline] = useState(false);
+  const [integracaoOnline, setIntegracaoOnline] = useState(false);
+
+  // Função para verificar disponibilidade de um serviço
+  const verificarServico = async (url, setStatus, estadoAtual) => {
+    try {
+      const response = await fetch(`${url}/health`, { method: "GET" });
+      const novoStatus = response.ok;
+
+        // 🔹 Só atualiza se o status realmente mudou
+        if (novoStatus !== estadoAtual) {
+            setStatus(novoStatus);
+            console.log(`Atualizando status de ${url}:`, novoStatus ? "✅ Online" : "❌ Offline");
+        }
+    } catch (error){
+      console.error(`Erro ao verificar ${url}:`, error);
+      // 🔹 Só atualiza se o status realmente mudou
+      if (estadoAtual !== false) {
+        setStatus(false);
+      }
+    }
+  };
+
+// Atualiza os status periodicamente
+useEffect(() => {
+  const atualizarStatus = () => {
+    verificarServico(API_FLUXO_CAIXA, setFluxoCaixaOnline);
+    verificarServico(API_RELATORIO, setRelatorioOnline);
+    verificarServico(API_AUTENTICACAO, setAutenticacaoOnline);
+    verificarServico(API_INTEGRACAO, setIntegracaoOnline);
+  };
+
+  atualizarStatus(); // Faz a primeira verificação imediatamente
+
+  const interval = setInterval(atualizarStatus, 15000); // Atualiza a cada 15 segundos
+
+  return () => clearInterval(interval); // Limpa o intervalo quando o componente for desmontado
+}, [fluxoCaixaOnline, relatorioOnline, autenticacaoOnline, integracaoOnline]);
 
   const logout = () => {
     localStorage.removeItem("contaId"); // 🔹 Remove o usuário do localStorage
@@ -112,7 +155,17 @@ const atualizarLancamento = async (e) => {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Dashboard</h1>
+      <h1>Dashboard</h1>
+      <div className="status-box">
+        <span className="status-title">Status</span>
+        <div className="status-container">
+          <span className={`status-indicator ${fluxoCaixaOnline ? "online" : "offline"}`} title="Fluxo de Caixa"></span>
+          <span className={`status-indicator ${relatorioOnline ? "online" : "offline"}`} title="Relatórios"></span>
+          <span className={`status-indicator ${autenticacaoOnline ? "online" : "offline"}`} title="Autenticação"></span>
+          <span className={`status-indicator ${integracaoOnline ? "online" : "offline"}`} title="Integrações"></span>
+        </div>
+      </div>
+
         <button className="btn btn-danger logout-button" onClick={logout}>
           🚪 Sair
         </button>

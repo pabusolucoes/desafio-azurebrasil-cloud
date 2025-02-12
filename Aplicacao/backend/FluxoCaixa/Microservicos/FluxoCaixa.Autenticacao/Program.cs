@@ -1,20 +1,13 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using Amazon.Runtime;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
@@ -39,7 +32,11 @@ app.UseCors(policy=>policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Microserviço de Autenticação v1"));
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Microserviço de Autenticação v1");
+        c.RoutePrefix = "";  // 🔹 Deixa o Swagger disponível na raiz "/"
+    });
 }
 
 var configuration = app.Services.GetRequiredService<IConfiguration>();
@@ -89,6 +86,29 @@ async Task EnsureTableExists()
 
 await EnsureTableExists();
 
+// Health Check Endpoint
+app.MapGet("/health", () =>
+{
+    try
+    {
+        // 🔹 Verifica conexão com DynamoDB
+        var dynamoCheck = dynamoDbClient != null;
+
+
+        if (dynamoCheck)
+        {
+            return Results.Ok(new { status = "OK", dynamoDb = "Online", rabbitMq = "Online" });
+        }
+        else
+        {
+            return Results.Problem("Algum serviço não está disponível", statusCode: 503);
+        }
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Erro no health check: {ex.Message}", statusCode: 500);
+    }
+});
 
 app.MapPost("/auth/criar", async ([FromBody] UserRequest request) =>
 {

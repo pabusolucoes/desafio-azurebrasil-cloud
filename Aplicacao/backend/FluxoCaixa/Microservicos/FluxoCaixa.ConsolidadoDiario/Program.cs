@@ -57,6 +57,32 @@ if (env.IsLocal() || env.IsDevelopment())
     });
 }
 
+// Health Check Endpoint
+app.MapGet("/health", (IDynamoDbService dynamoDbService, IRabbitMqProducer rabbitMqProducer) =>
+{
+    try
+    {
+        // 🔹 Verifica conexão com DynamoDB
+        var dynamoCheck = dynamoDbService != null;
+
+        // 🔹 Verifica conexão com RabbitMQ
+        var rabbitCheck = rabbitMqProducer != null;
+
+        if (dynamoCheck && rabbitCheck)
+        {
+            return Results.Ok(new { status = "OK", dynamoDb = "Online", rabbitMq = "Online" });
+        }
+        else
+        {
+            return Results.Problem("Algum serviço não está disponível", statusCode: 503);
+        }
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Erro no health check: {ex.Message}", statusCode: 500);
+    }
+});
+
 List<Lancamento> lancamentos = [];
 
 // 🔹 Endpoint para Buscar Consolidado por Período
