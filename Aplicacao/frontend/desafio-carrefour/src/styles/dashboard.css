@@ -213,3 +213,46 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .logout-button:hover {
   background-color: #c0392b;
 }
+.status-indicator {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #000; /* 🔹 Contorno para melhor visibilidade */
+}
+
+.status-indicator.online {
+  background-color: #28a745; /* Verde para serviços online */
+}
+
+.status-indicator.offline {
+  background-color: #dc3545; /* Vermelho para serviços offline */
+}
+
+.dashboard-title {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between; /* 🔹 Faz os ícones ficarem à direita */
+}
+.status-container {
+  display: flex;
+  gap: 8px; /* 🔹 Dá um espaço entre os ícones */
+}
+.status-box {
+  display: flex;
+  flex-direction: column; /* 🔹 Alinha o título e os ícones verticalmente */
+  align-items: center;
+  padding: 10px;
+  border: 2px solid #ccc; /* 🔹 Borda ao redor da caixa */
+  border-radius: 8px; /* 🔹 Bordas arredondadas */
+  background-color: #f8f9fa; /* 🔹 Fundo levemente cinza */
+}
+
+.status-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px; /* 🔹 Espaço entre o título e os ícones */
+  text-transform: uppercase;
+}
