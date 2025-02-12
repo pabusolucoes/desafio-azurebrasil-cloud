@@ -1,0 +1,103 @@
+{
+    "version": "0.2.0",
+    "compounds": [
+        {
+            "name": "Iniciar Todos os Microserviços",
+            "configurations": [
+                "Debug Lançamentos",
+                "Debug Consolidado Diário",
+                "Debug Integrações"
+            ]
+        }
+    ],
+    "configurations": [
+        {
+            "name": "Debug Autenticador",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "Build Autenticador",
+            "program": "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.Autenticacao\\bin\\Debug\\net8.0\\FluxoCaixa.Autenticacao.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.Autenticacao",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "DOTNET_USE_POLLING_FILE_WATCHER": "1",
+                "ASPNETCORE_URLS": "https://localhost:7554"
+            },
+            "sourceFileMap": {
+                "/app": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug Lançamentos",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "Build Lançamentos",
+            "program": "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.Lancamentos\\bin\\Debug\\net8.0\\FluxoCaixa.Lancamentos.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.Lancamentos",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Local",
+                "DOTNET_USE_POLLING_FILE_WATCHER": "1",
+                "ASPNETCORE_URLS": "https://localhost:7550"
+            },
+            "sourceFileMap": {
+                "/app": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug Consolidado Diário",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "Build Consolidado Diário",
+            "program": "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.ConsolidadoDiario\\bin\\Debug\\net8.0\\FluxoCaixa.ConsolidadoDiario.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.ConsolidadoDiario",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Local",
+                "DOTNET_USE_POLLING_FILE_WATCHER": "1",
+                "ASPNETCORE_URLS": "https://localhost:7551",
+            },
+            "sourceFileMap": {
+                "/app": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug Integrações",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "Build Integrações",
+            "program": "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.Integracoes\\bin\\Debug\\net8.0\\FluxoCaixa.Integracoes.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}\\FluxoCaixa\\Microservicos\\FluxoCaixa.Integracoes",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Local",
+                "DOTNET_USE_POLLING_FILE_WATCHER": "1",
+                "ASPNETCORE_URLS": "https://localhost:7552",
+            },
+            "sourceFileMap": {
+                "/app": "${workspaceFolder}"
+            }
+        }
+    ]
+}
