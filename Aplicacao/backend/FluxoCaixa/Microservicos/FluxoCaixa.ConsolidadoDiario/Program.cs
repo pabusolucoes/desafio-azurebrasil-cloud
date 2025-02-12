@@ -60,11 +60,11 @@ if (env.IsLocal() || env.IsDevelopment())
 List<Lancamento> lancamentos = [];
 
 // 🔹 Endpoint para Buscar Consolidado por Período
-app.MapGet("/consolidado-diario", async (DateTime dataInicial, DateTime dataFinal, IDynamoDbService dynamoDbService) =>
+app.MapGet("/consolidado-diario", async (DateTime dataInicial, DateTime dataFinal, string contaId, IDynamoDbService dynamoDbService) =>
 {
     try
     {
-        var consolidados = await dynamoDbService.ObterConsolidadoPorPeriodo(dataInicial, dataFinal);
+        var consolidados = await dynamoDbService.ObterConsolidadoPorPeriodo(dataInicial, dataFinal, contaId);
         return Results.Ok(consolidados);
     }
     catch (KeyNotFoundException ex)

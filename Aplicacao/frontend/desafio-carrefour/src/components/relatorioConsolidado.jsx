@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiRelatorio from "../services/apiRelatorio";
+import { getSecureItem } from "../services/storageHelper";
 import "../styles/relatorio.css";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -17,6 +18,7 @@ function RelatorioConsolidado() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [erro, setErro] = useState(""); // 🔹 Novo estado para mensagens de erro
   const itensPorPagina = 10; // 🔹 Define quantos registros mostrar por página
+  const contaId = getSecureItem("contaId"); //Obtém o contaId do usuário logado
 
   const gerarRelatorio = async (e) => {
     e.preventDefault();
@@ -30,7 +32,7 @@ function RelatorioConsolidado() {
         setErro(""); // Limpa a mensagem de erro caso as datas sejam válidas
     try {
       const response = await apiRelatorio.get("/consolidado-diario", {
-        params: { dataInicial, dataFinal },
+        params: { dataInicial, dataFinal, contaId},
       });
       setRelatorio(response.data);
       setSaldoTotal(

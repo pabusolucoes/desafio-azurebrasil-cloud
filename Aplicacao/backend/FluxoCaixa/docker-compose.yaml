@@ -1,6 +1,21 @@
 version: "3.9"
 
 services:
+  fluxo-caixa-autenticacao:
+      build:
+        context: ./Microservicos/FluxoCaixa.Autenticacao
+        dockerfile: Dockerfile
+      container_name: fluxo_caixa_autenticacao
+      ports:
+        - "5004:5004"
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Staging
+        - ASPNETCORE_URLS=http://+:5004
+      networks:
+        - app_network
+      depends_on:
+        dynamodb:
+          condition: service_started
   fluxo-caixa-lancamentos:
     build:
       context: ./Microservicos/FluxoCaixa.Lancamentos
@@ -14,6 +29,8 @@ services:
     networks:
       - app_network
     depends_on:
+      fluxo-caixa-autenticacao:
+        condition: service_started
       rabbitmq:
         condition: service_healthy
       dynamodb:
@@ -32,6 +49,8 @@ services:
     networks:
       - app_network
     depends_on:
+      fluxo-caixa-autenticacao:
+        condition: service_started    
       rabbitmq:
         condition: service_healthy
       dynamodb:
@@ -50,6 +69,8 @@ services:
     networks:
       - app_network
     depends_on:
+      fluxo-caixa-autenticacao:
+        condition: service_started
       rabbitmq:
         condition: service_healthy
       dynamodb:
@@ -79,10 +100,10 @@ services:
       RABBITMQ_DEFAULT_PASS: admin
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
+      interval: 8s
       timeout: 5s
       retries: 5
-      start_period: 10s      
+      start_period: 5s      
 
 networks:
   app_network:

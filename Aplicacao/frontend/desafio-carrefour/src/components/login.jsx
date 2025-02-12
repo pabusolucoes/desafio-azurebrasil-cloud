@@ -1,6 +1,8 @@
+import { jwtDecode } from "jwt-decode"; // ✅ CORRETO
 import  { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiLogin from "../services/apiLogin";
+import { setSecureItem } from "../services/storageHelper";
 import "../styles/login.css"; // Estilos centralizados na pasta styles
 
 function Login() {
@@ -9,30 +11,26 @@ function Login() {
   const navigate = useNavigate();
 
     // Mock de autenticação
-    const mockAuthenticate = (username, password) => {
-        const MOCK_USER = "26492329864";
-        const MOCK_PASSWORD = "123456";
     
-        return username === MOCK_USER && password === MOCK_PASSWORD;
-      };
-
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await apiLogin.post("/login", { username, password });
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("username", username);
+      const response = await apiLogin.post("/auth/login", { username, password });
+      const { token, user } = response.data;
 
-      navigate("/dashboard");
+      if(token) {
+        const decodedToken  = jwtDecode(token);
+        const apiKey = decodedToken.api_key;
+
+        if (apiKey){
+          setSecureItem("apiKey", apiKey);
+          setSecureItem("contaId", user);
+          navigate("/dashboard");
+        }        
+      }
+      
     } catch {
-        console.warn("API indisponível, usando mock para autenticação.");
-        if (mockAuthenticate(username, password)) {
-            localStorage.setItem("token", "mock_token");
-            localStorage.setItem("username", username);
-            navigate("/dashboard");
-        } else {
-            alert("Usuário ou senha incorretos.");
-        }
+        console.warn("API indisponível");
     }
   };
 

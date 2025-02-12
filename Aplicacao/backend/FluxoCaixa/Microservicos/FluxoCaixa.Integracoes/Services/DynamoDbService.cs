@@ -180,7 +180,7 @@ public async Task ReprocessarConsolidado(DateTime? dataInicio = null, DateTime? 
                 .Select(g => new ConsolidadoDiario
                 {
                     ContaId = g.First().ContaId,
-                    Data = g.Key,
+                    Data = g.Key.Date,
                     TotalDebitos = g.Where(l => l.Tipo == "DÉBITO").Sum(l => l.Valor),
                     TotalCreditos = g.Where(l => l.Tipo == "CRÉDITO").Sum(l => l.Valor),
                     Saldo = g.Sum(l => l.Tipo == "CRÉDITO" ? l.Valor : -l.Valor)

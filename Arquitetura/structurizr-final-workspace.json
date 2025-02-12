@@ -1,0 +1,709 @@
+{
+    "configuration": {},
+    "description": "Description",
+    "documentation": {},
+    "id": 99548,
+    "lastModifiedAgent": "structurizr-cloud/dsl-editor/35a376c2-124b-4214-9fa7-86ebb3066d0f",
+    "lastModifiedDate": "2025-02-12T02:17:20Z",
+    "lastModifiedUser": "fbuttazzi@gmail.com",
+    "model": {
+        "people": [
+            {
+                "description": "Gerenciar o fluxo de caixa",
+                "id": "1",
+                "location": "Unspecified",
+                "name": "Administrador Financeiro",
+                "properties": {
+                    "structurizr.dsl.identifier": "user"
+                },
+                "relationships": [
+                    {
+                        "description": "Registra e consulta lançamentos no",
+                        "destinationId": "30",
+                        "id": "31",
+                        "sourceId": "1",
+                        "tags": "Relationship",
+                        "technology": "HTTPS"
+                    },
+                    {
+                        "description": "Registra e consulta lançamentos no",
+                        "destinationId": "3",
+                        "id": "32",
+                        "linkedRelationshipId": "31",
+                        "sourceId": "1",
+                        "technology": "HTTPS"
+                    }
+                ],
+                "tags": "Element,Person,External"
+            },
+            {
+                "description": "Arquiteto",
+                "id": "2",
+                "location": "Unspecified",
+                "name": "Avaliador",
+                "properties": {
+                    "structurizr.dsl.identifier": "user2"
+                },
+                "relationships": [
+                    {
+                        "description": "Avalia o",
+                        "destinationId": "3",
+                        "id": "38",
+                        "sourceId": "2",
+                        "tags": "Relationship"
+                    }
+                ],
+                "tags": "Element,Person,External"
+            }
+        ],
+        "properties": {
+            "structurizr.groupSeparator": "/"
+        },
+        "softwareSystems": [
+            {
+                "containers": [
+                    {
+                        "description": "Registra Documentos",
+                        "documentation": {},
+                        "id": "4",
+                        "name": "Documentos",
+                        "properties": {
+                            "structurizr.dsl.identifier": "sgbd"
+                        },
+                        "tags": "Element,Container,Amazon Web Services - DynamoDB",
+                        "technology": "DynamoDB"
+                    },
+                    {
+                        "description": "Responsável por disponibilizar as mensagens em tópicos",
+                        "documentation": {},
+                        "id": "5",
+                        "name": "Amazon Kafka",
+                        "properties": {
+                            "structurizr.dsl.identifier": "kafka"
+                        },
+                        "relationships": [
+                            {
+                                "description": "Envia métricas/Logs para",
+                                "destinationId": "34",
+                                "id": "36",
+                                "sourceId": "5",
+                                "tags": "Relationship"
+                            }
+                        ],
+                        "tags": "Element,Container,Amazon Web Services - Managed Streaming for Apache Kafka",
+                        "technology": "Apache Kafka"
+                    },
+                    {
+                        "description": "Responsável pela comunicação com o Fargate",
+                        "documentation": {},
+                        "id": "6",
+                        "name": "Gateway",
+                        "properties": {
+                            "structurizr.dsl.identifier": "apigateway"
+                        },
+                        "relationships": [
+                            {
+                                "description": "Encaminha requisições para",
+                                "destinationId": "23",
+                                "id": "25",
+                                "sourceId": "6",
+                                "tags": "Relationship"
+                            },
+                            {
+                                "description": "Envia métricas/Logs para",
+                                "destinationId": "34",
+                                "id": "37",
+                                "sourceId": "6",
+                                "tags": "Relationship"
+                            }
+                        ],
+                        "tags": "Element,Container,Amazon Web Services - API Gateway",
+                        "technology": "Gateway Protocol"
+                    },
+                    {
+                        "description": "Network Loader Balance",
+                        "documentation": {},
+                        "id": "7",
+                        "name": "NLB",
+                        "properties": {
+                            "structurizr.dsl.identifier": "nlb"
+                        },
+                        "relationships": [
+                            {
+                                "description": "Encaminha requisições para",
+                                "destinationId": "9",
+                                "id": "10",
+                                "sourceId": "7",
+                                "tags": "Relationship",
+                                "technology": "TCP"
+                            },
+                            {
+                                "description": "Encaminha requisições para",
+                                "destinationId": "8",
+                                "id": "11",
+                                "linkedRelationshipId": "10",
+                                "sourceId": "7",
+                                "technology": "TCP"
+                            }
+                        ],
+                        "tags": "Element,Container,Amazon Web Services - Elastic Load Balancing Network Load Balancer",
+                        "technology": "TCP/SSL"
+                    },
+                    {
+                        "components": [
+                            {
+                                "description": "java",
+                                "documentation": {},
+                                "id": "9",
+                                "name": "Kafka Consumer personalizado",
+                                "properties": {
+                                    "structurizr.dsl.identifier": "kafkaconnector"
+                                },
+                                "relationships": [
+                                    {
+                                        "description": "Encaminha mensagens Kafka para consumidores",
+                                        "destinationId": "7",
+                                        "id": "21",
+                                        "sourceId": "9",
+                                        "tags": "Relationship"
+                                    }
+                                ],
+                                "tags": "Element,Component"
+                            },
+                            {
+                                "description": "Gerencia Usuários, Senhas, API-KEYS e processa a Autenticação",
+                                "documentation": {},
+                                "id": "12",
+                                "name": "MicroServiço FluxoCaixa.Autenticacao",
+                                "properties": {
+                                    "structurizr.dsl.identifier": "autenticacao"
+                                },
+                                "relationships": [
+                                    {
+                                        "description": "Armazena Documentos",
+                                        "destinationId": "4",
+                                        "id": "13",
+                                        "sourceId": "12",
+                                        "tags": "Relationship",
+                                        "technology": "DynamoDB Protocol"
+                                    }
+                                ],
+                                "tags": "Element,Component,Amazon Web Services - ECS Anywhere",
+                                "technology": "C#"
+                            },
+                            {
+                                "description": "Registra e exibe lançamentos",
+                                "documentation": {},
+                                "id": "15",
+                                "name": "MicroServico FluxoCaixa.Lancamentos",
+                                "properties": {
+                                    "structurizr.dsl.identifier": "fluxocaixalancamentos"
+                                },
+                                "tags": "Element,Component,Amazon Web Services - ECS Anywhere",
+                                "technology": "C#"
+                            },
+                            {
+                                "description": "Processa e exibe os lançamentos consolidados",
+                                "documentation": {},
+                                "id": "16",
+                                "name": "MicroServico FluxoCaixa.ConsolidadoDiario",
+                                "properties": {
+                                    "structurizr.dsl.identifier": "fluxocaixaconsolidadodiario"
+                                },
+                                "tags": "Element,Component,Amazon Web Services - ECS Anywhere",
+                                "technology": "C#"
+                            },
+                            {
+                                "description": "Processa e persiste os lançamentos no SGBD",
+                                "documentation": {},
+                                "id": "17",
+                                "name": "MicroServico FluxoCaixa.Integracoes",
+                                "properties": {
+                                    "structurizr.dsl.identifier": "fluxocaixaintegracoes"
+                                },
+                                "relationships": [
+                                    {
+                                        "description": "Consome mensagens dos tópicos",
+                                        "destinationId": "5",
+                                        "id": "18",
+                                        "sourceId": "17",
+                                        "tags": "Relationship"
+                                    },
+                                    {
+                                        "description": "Persiste lançamentos e consolidados",
+                                        "destinationId": "4",
+                                        "id": "20",
+                                        "sourceId": "17",
+                                        "tags": "Relationship"
+                                    }
+                                ],
+                                "tags": "Element,Component,Amazon Web Services - ECS Anywhere",
+                                "technology": "C#"
+                            }
+                        ],
+                        "description": "Responsável por hospedar os ECS Fargate (Service)",
+                        "documentation": {},
+                        "id": "8",
+                        "name": "Fargate",
+                        "properties": {
+                            "structurizr.dsl.identifier": "fargate"
+                        },
+                        "relationships": [
+                            {
+                                "description": "Armazena Documentos",
+                                "destinationId": "4",
+                                "id": "14",
+                                "linkedRelationshipId": "13",
+                                "sourceId": "8",
+                                "technology": "DynamoDB Protocol"
+                            },
+                            {
+                                "description": "Consome mensagens dos tópicos",
+                                "destinationId": "5",
+                                "id": "19",
+                                "linkedRelationshipId": "18",
+                                "sourceId": "8"
+                            },
+                            {
+                                "description": "Encaminha mensagens Kafka para consumidores",
+                                "destinationId": "7",
+                                "id": "22",
+                                "linkedRelationshipId": "21",
+                                "sourceId": "8"
+                            },
+                            {
+                                "description": "Envia métricas/Logs para",
+                                "destinationId": "34",
+                                "id": "35",
+                                "sourceId": "8",
+                                "tags": "Relationship"
+                            }
+                        ],
+                        "tags": "Element,Container,Amazon Web Services - Fargate",
+                        "technology": "ECS"
+                    },
+                    {
+                        "description": "Application Loader Balance",
+                        "documentation": {},
+                        "id": "23",
+                        "name": "ALB",
+                        "properties": {
+                            "structurizr.dsl.identifier": "alb"
+                        },
+                        "relationships": [
+                            {
+                                "description": "Distribui uniformemente as requests para",
+                                "destinationId": "8",
+                                "id": "24",
+                                "sourceId": "23",
+                                "tags": "Relationship"
+                            },
+                            {
+                                "description": "Encaminha requisições para",
+                                "destinationId": "9",
+                                "id": "26",
+                                "sourceId": "23",
+                                "tags": "Relationship"
+                            },
+                            {
+                                "description": "Roteia chamadas para consultas",
+                                "destinationId": "15",
+                                "id": "27",
+                                "sourceId": "23",
+                                "tags": "Relationship"
+                            },
+                            {
+                                "description": "Roteia chamadas para consultas",
+                                "destinationId": "16",
+                                "id": "28",
+                                "sourceId": "23",
+                                "tags": "Relationship"
+                            },
+                            {
+                                "description": "Roteia chamadas para consultas",
+                                "destinationId": "12",
+                                "id": "29",
+                                "sourceId": "23",
+                                "tags": "Relationship"
+                            }
+                        ],
+                        "tags": "Element,Container,Amazon Web Services - Elastic Load Balancing Application Load Balancer",
+                        "technology": "ALB"
+                    },
+                    {
+                        "description": "Registra e exibe os lançamentos financeiros",
+                        "documentation": {},
+                        "id": "30",
+                        "name": "Fluxo de Caixa",
+                        "properties": {
+                            "structurizr.dsl.identifier": "frontend"
+                        },
+                        "relationships": [
+                            {
+                                "description": "Recebe e Envia requests ao",
+                                "destinationId": "6",
+                                "id": "33",
+                                "properties": {
+                                    "structurizr.dsl.identifier": "rel4"
+                                },
+                                "sourceId": "30",
+                                "tags": "Relationship,tag4",
+                                "technology": "HTTPS"
+                            }
+                        ],
+                        "tags": "Element,Container,Amazon Web Services - Amplify",
+                        "technology": "React/Vite"
+                    },
+                    {
+                        "description": "Responsável pelo Monitoramento e Logs",
+                        "documentation": {},
+                        "id": "34",
+                        "name": "CloudWacth",
+                        "properties": {
+                            "structurizr.dsl.identifier": "cloudwatch"
+                        },
+                        "tags": "Element,Container,Amazon Web Services - CloudWatch",
+                        "technology": "CloudWatch"
+                    }
+                ],
+                "documentation": {},
+                "id": "3",
+                "location": "Unspecified",
+                "name": "Desafio Carrefour",
+                "properties": {
+                    "structurizr.dsl.identifier": "desafio"
+                },
+                "tags": "Element,Software System"
+            }
+        ]
+    },
+    "name": "Desafio Carrefour ALta Disponibilidade",
+    "properties": {
+        "structurizr.dsl": "d29ya3NwYWNlICJEZXNhZmlvIENhcnJlZm91ciBBTHRhIERpc3BvbmliaWxpZGFkZSIgewoKICAgIG1vZGVsIHsKICAgIAogICAgICAgICAgICBwcm9wZXJ0aWVzIHsKICAgICAgICAgICAgICAgICJzdHJ1Y3R1cml6ci5ncm91cFNlcGFyYXRvciIgIi8iCiAgICAgICAgICAgIH0KICAgICAgICAgICAgdXNlciA9IHBlcnNvbiAiQWRtaW5pc3RyYWRvciBGaW5hbmNlaXJvIiAiR2VyZW5jaWFyIG8gZmx1eG8gZGUgY2FpeGEiICJFeHRlcm5hbCIKICAgICAgICAgICAgdXNlcjIgPSBwZXJzb24gIkF2YWxpYWRvciIgIkFycXVpdGV0byIgIkV4dGVybmFsIgogICAgICAgICAgICBkZXNhZmlvID0gc29mdHdhcmVTeXN0ZW0gIkRlc2FmaW8gQ2FycmVmb3VyInsKCiAgICAgICAgICAgICAgICBzZ2JkID0gY29udGFpbmVyICJEb2N1bWVudG9zIiAiUmVnaXN0cmEgRG9jdW1lbnRvcyIgIkR5bmFtb0RCIiAiQW1hem9uIFdlYiBTZXJ2aWNlcyAtIER5bmFtb0RCInsKICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIGthZmthID0gY29udGFpbmVyICJBbWF6b24gS2Fma2EiICJSZXNwb25zw6F2ZWwgcG9yIGRpc3BvbmliaWxpemFyIGFzIG1lbnNhZ2VucyBlbSB0w7NwaWNvcyIgIkFwYWNoZSBLYWZrYSIgIkFtYXpvbiBXZWIgU2VydmljZXMgLSBNYW5hZ2VkIFN0cmVhbWluZyBmb3IgQXBhY2hlIEthZmthInsKICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIGFwaWdhdGV3YXkgPSBjb250YWluZXIgIkdhdGV3YXkiICJSZXNwb25zw6F2ZWwgcGVsYSBjb211bmljYcOnw6NvIGNvbSBvIEZhcmdhdGUiICJHYXRld2F5IFByb3RvY29sIiAiQW1hem9uIFdlYiBTZXJ2aWNlcyAtIEFQSSBHYXRld2F5InsKICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgbmxiID0gY29udGFpbmVyICJOTEIiICJOZXR3b3JrIExvYWRlciBCYWxhbmNlIiAiVENQL1NTTCIgIkFtYXpvbiBXZWIgU2VydmljZXMgLSBFbGFzdGljIExvYWQgQmFsYW5jaW5nIE5ldHdvcmsgTG9hZCBCYWxhbmNlciJ7CgogICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgfSAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgZmFyZ2F0ZSA9IGNvbnRhaW5lciAiRmFyZ2F0ZSIgIlJlc3BvbnPDoXZlbCBwb3IgaG9zcGVkYXIgb3MgRUNTIEZhcmdhdGUgKFNlcnZpY2UpICIgIkVDUyIgIkFtYXpvbiBXZWIgU2VydmljZXMgLSBGYXJnYXRlIiB7CgogICAgICAgICAgICAgICAgICAgIGthZmthY29ubmVjdG9yID0gY29tcG9uZW50ICJLYWZrYSBDb25zdW1lciBwZXJzb25hbGl6YWRvIiAiamF2YSIgewogICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgbmxiIC0+IHRoaXMgIkVuY2FtaW5oYSByZXF1aXNpw6fDtWVzIHBhcmEiICJUQ1AiCiAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICAgICAgYXV0ZW50aWNhY2FvID0gY29tcG9uZW50ICJNaWNyb1NlcnZpw6dvIEZsdXhvQ2FpeGEuQXV0ZW50aWNhY2FvIiAiR2VyZW5jaWEgVXN1w6FyaW9zLCBTZW5oYXMsIEFQSS1LRVlTIGUgcHJvY2Vzc2EgYSBBdXRlbnRpY2HDp8OjbyIgIkMjIiAiQW1hem9uIFdlYiBTZXJ2aWNlcyAtIEVDUyBBbnl3aGVyZSJ7CiAgICAgICAgICAgICAgICAgICAgICAgIHRoaXMgLT4gc2diZCAiQXJtYXplbmEgRG9jdW1lbnRvcyIgIkR5bmFtb0RCIFByb3RvY29sIgogICAgICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICAgICAgZmx1eG9jYWl4YUxhbmNhbWVudG9zID0gY29tcG9uZW50ICJNaWNyb1NlcnZpY28gRmx1eG9DYWl4YS5MYW5jYW1lbnRvcyIgIlJlZ2lzdHJhIGUgZXhpYmUgbGFuw6dhbWVudG9zIiAiQyMiICJBbWF6b24gV2ViIFNlcnZpY2VzIC0gRUNTIEFueXdoZXJlInsKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICBmbHV4b2NhaXhhQ29uc29saWRhZG9EaWFyaW8gPSBjb21wb25lbnQgIk1pY3JvU2VydmljbyBGbHV4b0NhaXhhLkNvbnNvbGlkYWRvRGlhcmlvIiAiUHJvY2Vzc2EgZSBleGliZSBvcyBsYW7Dp2FtZW50b3MgY29uc29saWRhZG9zIiAiQyMiICJBbWF6b24gV2ViIFNlcnZpY2VzIC0gRUNTIEFueXdoZXJlInsKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgZmx1eG9jYWl4YUludGVncmFjb2VzID0gY29tcG9uZW50ICJNaWNyb1NlcnZpY28gRmx1eG9DYWl4YS5JbnRlZ3JhY29lcyIgIlByb2Nlc3NhIGUgcGVyc2lzdGUgb3MgbGFuw6dhbWVudG9zIG5vIFNHQkQiICJDIyIgIkFtYXpvbiBXZWIgU2VydmljZXMgLSBFQ1MgQW55d2hlcmUiewogICAgICAgICAgICAgICAgICAgICBmbHV4b2NhaXhhSW50ZWdyYWNvZXMgLT4ga2Fma2EgIkNvbnNvbWUgbWVuc2FnZW5zIGRvcyB0w7NwaWNvcyIKICAgICAgICAgICAgICAgICAgICAgZmx1eG9jYWl4YUludGVncmFjb2VzIC0+IHNnYmQgIlBlcnNpc3RlIGxhbsOnYW1lbnRvcyBlIGNvbnNvbGlkYWRvcyIKCiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgIGthZmthY29ubmVjdG9yIC0+IG5sYiAiRW5jYW1pbmhhIG1lbnNhZ2VucyBLYWZrYSBwYXJhIGNvbnN1bWlkb3JlcyIKCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBhbGIgPSBjb250YWluZXIgIkFMQiIgIkFwcGxpY2F0aW9uIExvYWRlciBCYWxhbmNlIiAiQUxCIiAiQW1hem9uIFdlYiBTZXJ2aWNlcyAtIEVsYXN0aWMgTG9hZCBCYWxhbmNpbmcgQXBwbGljYXRpb24gTG9hZCBCYWxhbmNlciIgewogICAgICAgICAgICAgICAgICAgIHRoaXMgLT4gZmFyZ2F0ZSAiRGlzdHJpYnVpIHVuaWZvcm1lbWVudGUgYXMgcmVxdWVzdHMgcGFyYSIKICAgICAgICAgICAgICAgICAgICBhcGlnYXRld2F5IC0+IHRoaXMgIkVuY2FtaW5oYSByZXF1aXNpw6fDtWVzIHBhcmEiCiAgICAgICAgICAgICAgICAgICAgdGhpcyAtPiBrYWZrYWNvbm5lY3RvciAiRW5jYW1pbmhhIHJlcXVpc2nDp8O1ZXMgcGFyYSIKICAgICAgICAgICAgICAgICAgICBhbGIgLT4gZmx1eG9jYWl4YUxhbmNhbWVudG9zICJSb3RlaWEgY2hhbWFkYXMgcGFyYSBjb25zdWx0YXMiCiAgICAgICAgICAgICAgICAgICAgYWxiIC0+IGZsdXhvY2FpeGFDb25zb2xpZGFkb0RpYXJpbyAiUm90ZWlhIGNoYW1hZGFzIHBhcmEgY29uc3VsdGFzIgogICAgICAgICAgICAgICAgICAgIGFsYiAtPiBhdXRlbnRpY2FjYW8gIlJvdGVpYSBjaGFtYWRhcyBwYXJhIGNvbnN1bHRhcyIKICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIGZyb250ZW5kID0gY29udGFpbmVyICJGbHV4byBkZSBDYWl4YSIgIlJlZ2lzdHJhIGUgZXhpYmUgb3MgbGFuw6dhbWVudG9zIGZpbmFuY2Vpcm9zIiAiUmVhY3QvVml0ZSIgIkFtYXpvbiBXZWIgU2VydmljZXMgLSBBbXBsaWZ5InsKICAgICAgICAgICAgICAgICAgICB1c2VyIC0+IHRoaXMgIlJlZ2lzdHJhIGUgY29uc3VsdGEgbGFuw6dhbWVudG9zIG5vIiAiSFRUUFMiCiAgICAgICAgICAgICAgICAgICAgcmVsNCA9IHRoaXMgLT4gYXBpZ2F0ZXdheSAiUmVjZWJlIGUgRW52aWEgcmVxdWVzdHMgYW8gIiAiSFRUUFMiICJ0YWc0IgogICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgY2xvdWR3YXRjaCA9IGNvbnRhaW5lciAiQ2xvdWRXYWN0aCIgIlJlc3BvbnPDoXZlbCBwZWxvIE1vbml0b3JhbWVudG8gZSBMb2dzIiAiQ2xvdWRXYXRjaCIgIkFtYXpvbiBXZWIgU2VydmljZXMgLSBDbG91ZFdhdGNoInsKICAgICAgICAgICAgICAgICAgICBmYXJnYXRlIC0+IHRoaXMgIkVudmlhIG3DqXRyaWNhcy9Mb2dzIHBhcmEiCiAgICAgICAgICAgICAgICAgICAga2Fma2EgLT4gdGhpcyAiRW52aWEgbcOpdHJpY2FzL0xvZ3MgcGFyYSIKICAgICAgICAgICAgICAgICAgICBhcGlnYXRld2F5IC0+IHRoaXMgIkVudmlhIG3DqXRyaWNhcy9Mb2dzIHBhcmEiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICB1c2VyMiAtPiB0aGlzICJBdmFsaWEgbyAiCiAgICAgICAgICAgfQogICAgICAgIH0KICAgIAogICAgdmlld3MgewogICAgICAgIHN5c3RlbUNvbnRleHQgZGVzYWZpbyBDb250ZXh0RGlhZ3JhbSB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBleGNsdWRlIHVzZXIKICAgICAgICAgICAgYXV0b2xheW91dAogICAgICAgIH0KICAgICAgICBjb250YWluZXIgZGVzYWZpbyAiQ29udGFpbmVyRGlhZ3JhbSIgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgZXhjbHVkZSBzZ2JkCiAgICAgICAgICAgIGF1dG9MYXlvdXQgbHIKICAgICAgICB9CiAgICAgICAgY29tcG9uZW50IGZhcmdhdGUgIkNvbXBvbmVudERpYWdyYW0iIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9MYXlvdXQKICAgICAgICB9CiAgICAgICAgdGhlbWUgZGVmYXVsdAogICAgICAgIHN0eWxlcyB7CiAgICAgICAgICAgIHJlbGF0aW9uc2hpcCAidGFnMSIgewogICAgICAgICAgICAgICAgcm91dGluZyBDdXJ2ZWQKICAgICAgICAgICAgfQogICAgICAgICAgICByZWxhdGlvbnNoaXAgInRhZzIiIHsKICAgICAgICAgICAgICAgIHJvdXRpbmcgQ3VydmVkCiAgICAgICAgICAgIH0KICAgICAgICAgICAgcmVsYXRpb25zaGlwICJ0YWc0IiB7CiAgICAgICAgICAgICAgICByb3V0aW5nIE9ydGhvZ29uYWwKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJzb2Z0d2FyZVN5c3RlbSJ7CiAgICAgICAgICAgICAgICBzdHJva2UgI2ZmZmZmZgogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkFtYXpvbiBXZWIgU2VydmljZXMgLSBBbXBsaWZ5IiB7CiAgICAgICAgICAgICAgICBzaGFwZSBXZWJCcm93c2VyCiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICM4OEJCRjcKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJBbWF6b24gV2ViIFNlcnZpY2VzIC0gRHluYW1vREIiewogICAgICAgICAgICAgICAgc2hhcGUgQ3lsaW5kZXIKICAgICAgICAgICAgfQogICAgICAgICAgICAKICAgICAgICB9CiAgICAgICAgdGhlbWVzIGh0dHBzOi8vc3RhdGljLnN0cnVjdHVyaXpyLmNvbS90aGVtZXMvYW1hem9uLXdlYi1zZXJ2aWNlcy0yMDIzLjAxLjMxL3RoZW1lLmpzb24KICAgIH0KCn0K"
+    },
+    "views": {
+        "componentViews": [
+            {
+                "automaticLayout": {
+                    "applied": true,
+                    "edgeSeparation": 0,
+                    "implementation": "Graphviz",
+                    "nodeSeparation": 300,
+                    "rankDirection": "TopBottom",
+                    "rankSeparation": 300,
+                    "vertices": false
+                },
+                "containerId": "8",
+                "dimensions": {
+                    "height": 1900,
+                    "width": 3890
+                },
+                "elements": [
+                    {
+                        "id": "4",
+                        "x": 970,
+                        "y": 1365
+                    },
+                    {
+                        "id": "5",
+                        "x": 1720,
+                        "y": 1365
+                    },
+                    {
+                        "id": "7",
+                        "x": 220,
+                        "y": 165
+                    },
+                    {
+                        "id": "9",
+                        "x": 220,
+                        "y": 765
+                    },
+                    {
+                        "id": "12",
+                        "x": 970,
+                        "y": 765
+                    },
+                    {
+                        "id": "15",
+                        "x": 3220,
+                        "y": 765
+                    },
+                    {
+                        "id": "16",
+                        "x": 2470,
+                        "y": 765
+                    },
+                    {
+                        "id": "17",
+                        "x": 1720,
+                        "y": 765
+                    },
+                    {
+                        "id": "23",
+                        "x": 1720,
+                        "y": 165
+                    }
+                ],
+                "externalContainerBoundariesVisible": false,
+                "key": "ComponentDiagram",
+                "order": 3,
+                "relationships": [
+                    {
+                        "id": "10",
+                        "vertices": [
+                            {
+                                "x": 295,
+                                "y": 615
+                            }
+                        ]
+                    },
+                    {
+                        "id": "13"
+                    },
+                    {
+                        "id": "18"
+                    },
+                    {
+                        "id": "20"
+                    },
+                    {
+                        "id": "21",
+                        "vertices": [
+                            {
+                                "x": 595,
+                                "y": 615
+                            }
+                        ]
+                    },
+                    {
+                        "id": "26",
+                        "vertices": [
+                            {
+                                "x": 820,
+                                "y": 661
+                            }
+                        ]
+                    },
+                    {
+                        "id": "27",
+                        "vertices": [
+                            {
+                                "x": 3070,
+                                "y": 661
+                            }
+                        ]
+                    },
+                    {
+                        "id": "28"
+                    },
+                    {
+                        "id": "29"
+                    }
+                ]
+            }
+        ],
+        "configuration": {
+            "branding": {},
+            "lastSavedView": "ComponentDiagram",
+            "metadataSymbols": "SquareBrackets",
+            "styles": {
+                "elements": [
+                    {
+                        "stroke": "#ffffff",
+                        "tag": "softwareSystem"
+                    },
+                    {
+                        "background": "#88bbf7",
+                        "shape": "WebBrowser",
+                        "tag": "Amazon Web Services - Amplify"
+                    },
+                    {
+                        "shape": "Cylinder",
+                        "tag": "Amazon Web Services - DynamoDB"
+                    }
+                ],
+                "relationships": [
+                    {
+                        "routing": "Curved",
+                        "tag": "tag1"
+                    },
+                    {
+                        "routing": "Curved",
+                        "tag": "tag2"
+                    },
+                    {
+                        "routing": "Orthogonal",
+                        "tag": "tag4"
+                    }
+                ]
+            },
+            "terminology": {},
+            "themes": [
+                "https://static.structurizr.com/themes/default/theme.json",
+                "https://static.structurizr.com/themes/amazon-web-services-2023.01.31/theme.json"
+            ]
+        },
+        "containerViews": [
+            {
+                "automaticLayout": {
+                    "applied": true,
+                    "edgeSeparation": 0,
+                    "implementation": "Graphviz",
+                    "nodeSeparation": 300,
+                    "rankDirection": "LeftRight",
+                    "rankSeparation": 300,
+                    "vertices": false
+                },
+                "dimensions": {
+                    "height": 1849,
+                    "width": 5370
+                },
+                "elements": [
+                    {
+                        "id": "1",
+                        "x": 200,
+                        "y": 278
+                    },
+                    {
+                        "id": "5",
+                        "x": 3950,
+                        "y": 315
+                    },
+                    {
+                        "id": "6",
+                        "x": 1700,
+                        "y": 278
+                    },
+                    {
+                        "id": "7",
+                        "x": 3950,
+                        "y": 1223
+                    },
+                    {
+                        "id": "8",
+                        "x": 3200,
+                        "y": 769
+                    },
+                    {
+                        "id": "23",
+                        "x": 2450,
+                        "y": 544
+                    },
+                    {
+                        "id": "30",
+                        "x": 950,
+                        "y": 278
+                    },
+                    {
+                        "id": "34",
+                        "x": 4700,
+                        "y": 315
+                    }
+                ],
+                "externalSoftwareSystemBoundariesVisible": false,
+                "key": "ContainerDiagram",
+                "order": 2,
+                "relationships": [
+                    {
+                        "id": "11",
+                        "vertices": [
+                            {
+                                "x": 3877,
+                                "y": 1017
+                            }
+                        ]
+                    },
+                    {
+                        "id": "19"
+                    },
+                    {
+                        "id": "22",
+                        "vertices": [
+                            {
+                                "x": 3722,
+                                "y": 1274
+                            }
+                        ]
+                    },
+                    {
+                        "id": "24"
+                    },
+                    {
+                        "id": "25"
+                    },
+                    {
+                        "id": "31"
+                    },
+                    {
+                        "id": "33"
+                    },
+                    {
+                        "id": "35",
+                        "vertices": [
+                            {
+                                "x": 4400,
+                                "y": 765
+                            }
+                        ]
+                    },
+                    {
+                        "id": "36"
+                    },
+                    {
+                        "id": "37",
+                        "vertices": [
+                            {
+                                "x": 3950,
+                                "y": 165
+                            },
+                            {
+                                "x": 4400,
+                                "y": 165
+                            }
+                        ]
+                    }
+                ],
+                "softwareSystemId": "3"
+            }
+        ],
+        "systemContextViews": [
+            {
+                "automaticLayout": {
+                    "applied": true,
+                    "edgeSeparation": 0,
+                    "implementation": "Graphviz",
+                    "nodeSeparation": 300,
+                    "rankDirection": "TopBottom",
+                    "rankSeparation": 300,
+                    "vertices": false
+                },
+                "dimensions": {
+                    "height": 1300,
+                    "width": 950
+                },
+                "elements": [
+                    {
+                        "id": "2",
+                        "x": 249,
+                        "y": 165
+                    },
+                    {
+                        "id": "3",
+                        "x": 249,
+                        "y": 765
+                    }
+                ],
+                "enterpriseBoundaryVisible": true,
+                "key": "ContextDiagram",
+                "order": 1,
+                "relationships": [
+                    {
+                        "id": "38"
+                    }
+                ],
+                "softwareSystemId": "3"
+            }
+        ]
+    }
+}

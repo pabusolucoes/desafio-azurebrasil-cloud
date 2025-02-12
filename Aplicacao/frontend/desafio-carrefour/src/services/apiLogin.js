@@ -1,8 +1,8 @@
 import axios from "axios";
-import { API_LOGIN } from "../config";
+import { API_AUTENTICACAO  } from "../config";
 
 const apiLogin = axios.create({
-  baseURL: API_LOGIN,
+  baseURL: API_AUTENTICACAO,
 });
 
 apiLogin.interceptors.request.use((config) => {

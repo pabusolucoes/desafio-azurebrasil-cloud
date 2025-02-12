@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lancamento } from "../models/Lancamento.js";
+import { getSecureItem } from "../services/storageHelper";
 import apiFluxoCaixa from "../services/apiFluxoCaixa";
 import TabelaLancamentos from "../components/tabelaLancamentos";
 
@@ -10,10 +11,12 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const logout = () => {
-    localStorage.removeItem("username"); // 🔹 Remove o usuário do localStorage
+    localStorage.removeItem("contaId"); // 🔹 Remove o usuário do localStorage
+    localStorage.removeItem("apiKey");
+    
     navigate("/"); // 🔹 Redireciona para a tela de login
   };
-  const contaId = localStorage.getItem("username"); //Obtém o contaId do usuário logado
+  const contaId = getSecureItem("contaId"); //Obtém o contaId do usuário logado
 
   const [filteredLancamentos, setFilteredLancamentos] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });

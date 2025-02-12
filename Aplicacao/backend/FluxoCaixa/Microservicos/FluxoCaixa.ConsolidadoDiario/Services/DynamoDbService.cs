@@ -30,25 +30,27 @@ namespace FluxoCaixa.ConsolidadoDiario.Services
             JsonLogger.Log("INFO", "DynamoDbService inicializado", new { Ambiente = _env.IsLocal() ? "Local" : "Produção" });
         }
 
-        public async Task<List<ConsolidadoDiarioModel>> ObterConsolidadoPorPeriodo(DateTime dataInicial, DateTime dataFinal)
+        public async Task<List<ConsolidadoDiarioModel>> ObterConsolidadoPorPeriodo(DateTime dataInicial, DateTime dataFinal, string contaId)
         {
             try
             {
-                var tables = await _client.ListTablesAsync();
+                var dataInicialUtc = dataInicial.Date.ToUniversalTime();
+                var dataFinalUtc = dataFinal.Date.AddDays(1).AddTicks(-1).ToUniversalTime(); // Gara
                 
                 var conditions = new List<ScanCondition>
                 {
-                    new("Data", ScanOperator.Between, dataInicial, dataFinal)
+                        new("Data", ScanOperator.Between, dataInicialUtc, dataFinalUtc), // Filtra por data
+                        new("ContaId", ScanOperator.Equal, contaId) // Filtra pelo ContaId
                 };
-
-                var consolidados = await _context.ScanAsync<ConsolidadoDiarioModel>(conditions).GetRemainingAsync();
-
-                if (consolidados == null || consolidados.Count == 0)
+                try
                 {
-                    throw new KeyNotFoundException($"Nenhum consolidado encontrado entre {dataInicial:yyyy-MM-dd} e {dataFinal:yyyy-MM-dd}.");
+                    var consolidados = await _context.ScanAsync<ConsolidadoDiarioModel>(conditions).GetRemainingAsync();
+                    return consolidados;
                 }
-
-                return consolidados;
+                catch (AmazonDynamoDBException)
+                {
+                    return  [];
+                }
             }
             catch (ResourceNotFoundException)
             {
