@@ -2,8 +2,16 @@ import PropTypes from "prop-types";
 import "../styles/table.css";
 
 function formatarData(data) {
+  if (!data) return "";
+
   const dateObj = new Date(data);
-  return dateObj.toLocaleDateString("pt-BR"); // Converte para "DD/MM/AAAA"
+  
+  // Ajusta para o fuso horário local corretamente
+  const dia = String(dateObj.getUTCDate()).padStart(2, "0");
+  const mes = String(dateObj.getUTCMonth() + 1).padStart(2, "0"); // getUTCMonth() retorna de 0 a 11
+  const ano = dateObj.getUTCFullYear();
+
+  return `${dia}/${mes}/${ano}`;
 }
 
 function TabelaLancamentos({ lancamentos, handleSort, sortConfig, handleEdit, handleDelete }) {

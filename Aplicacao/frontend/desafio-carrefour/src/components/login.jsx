@@ -75,6 +75,7 @@ function Login() {
             Entrar
           </button>
         </form>
+        <p>Não tem uma conta? <a href="/register">Registre-se aqui</a></p>
       </div>
     </div>
   );

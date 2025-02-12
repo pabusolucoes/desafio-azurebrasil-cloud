@@ -109,6 +109,7 @@ public class DynamoDbService:IDynamoDbService
     {
         try
         {
+            lancamento.Data = lancamento.Data.ToUniversalTime().Date; 
             await _context.SaveAsync(lancamento);
             JsonLogger.Log("INFO", "Lançamento salvo com sucesso", lancamento);
         }
@@ -176,15 +177,24 @@ public async Task ReprocessarConsolidado(DateTime? dataInicio = null, DateTime? 
             }
 
             var consolidado = lancamentos
-                .GroupBy(l => l.Data.Date)
+                .Select(l => new 
+                {
+                    ContaId = l.ContaId,
+                    Data = l.Data.ToUniversalTime().Date, // 🔹 Garante que a data esteja em UTC SEM horário
+                    Tipo = l.Tipo,
+                    Valor = l.Valor
+                })
+                .GroupBy(l => new { l.Data, l.ContaId }) // 🔹 Agora agrupa corretamente
                 .Select(g => new ConsolidadoDiario
                 {
-                    ContaId = g.First().ContaId,
-                    Data = g.Key.Date,
+                    ContaId = g.Key.ContaId,
+                    Data = g.Key.Data, // 🔹 Mantém a data corretamente sem converter
                     TotalDebitos = g.Where(l => l.Tipo == "DÉBITO").Sum(l => l.Valor),
                     TotalCreditos = g.Where(l => l.Tipo == "CRÉDITO").Sum(l => l.Valor),
                     Saldo = g.Sum(l => l.Tipo == "CRÉDITO" ? l.Valor : -l.Valor)
-                }).ToList();
+                })
+                .ToList();
+
 
             foreach (var item in consolidado)
             {
