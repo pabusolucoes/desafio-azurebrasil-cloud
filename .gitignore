@@ -5,7 +5,6 @@ out/
 Debug/
 Release/
 TestResults/
-.vscode/
 .idea/
 .vs/
 *.user
@@ -18,7 +17,6 @@ TestResults/
 *.csproj.DotSettings
 
 # 🔹 Configurações de editor (VS Code e Visual Studio)
-.vscode/
 .vs/
 .vscode-test/
 
@@ -63,7 +61,6 @@ pnpm-lock.yaml
 .yarnrc.yml
 
 # 🔹 Configuração do editor (VS Code e WebStorm)
-.vscode/
 .idea/
 *.suo
 *.ntvs*

@@ -48,7 +48,7 @@ useEffect(() => {
 
   atualizarStatus(); // Faz a primeira verificação imediatamente
 
-  const interval = setInterval(atualizarStatus, 15000); // Atualiza a cada 15 segundos
+  const interval = setInterval(atualizarStatus, 5000); // Atualiza a cada 5 segundos
 
   return () => clearInterval(interval); // Limpa o intervalo quando o componente for desmontado
 }, [fluxoCaixaOnline, relatorioOnline, autenticacaoOnline, integracaoOnline]);

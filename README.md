@@ -362,6 +362,9 @@ Exemplo:
 
 - ### Outros
 
+[Configuração VS Code Back-End - Launch](Aplicacao\backend\.vscode\launch.json)
+
+[Configuração VS Code Back-End - Tasks](Aplicacao\backend\.vscode\tasks.json)
 
 [Desafio Carrefour - Extensão - Calculadora de Preços da AWS](infraestrutura/Desafio%20Carrefour%20-%20Extensão%20-%20Calculadora%20de%20Preços%20da%20AWS.pdf)
 
