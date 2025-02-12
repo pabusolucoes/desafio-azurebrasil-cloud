@@ -3,23 +3,27 @@ using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
 using FluxoCaixa.Integracoes.Models;
-using FluxoCaixa.Integracoes.Extensions; // 🔹 Adicione essa linha para reconhecer a model
+using FluxoCaixa.Integracoes.Extensions;
+using FluxoCaixa.Integracoes.Shared; // 🔹 Importação do JsonLogger
 
 namespace FluxoCaixa.Integracoes.Services;
 
-public class RabbitMqConsumer
+public class RabbitMqConsumer: IRabbitMqConsumer
 {
     private readonly string _queueName = "fluxo-caixa-queue";
     private readonly DynamoDbService _dynamoDbService;
-
     private readonly ICustomEnvironment _env;
 
     public RabbitMqConsumer(ICustomEnvironment env)
     {
         _env = env;
         _dynamoDbService = new DynamoDbService(_env);
+
+        JsonLogger.Log("INFO", "RabbitMqConsumer inicializado", new { Ambiente = _env.IsLocal() ? "Local" : "Produção" });
+
         _dynamoDbService.CriarTabelasSeNaoExistirem().Wait(); // 🔹 Criar a tabela ao iniciar o serviço
     }
+
     public void StartConsuming()
     {
         var factory = new ConnectionFactory() { HostName = "rabbitmq", UserName = "admin", Password = "admin" };
@@ -27,6 +31,7 @@ public class RabbitMqConsumer
         {
             factory = new ConnectionFactory() { HostName = "localhost", UserName = "admin", Password = "admin" };
         }
+
         var connection = factory.CreateConnection();
         var channel = connection.CreateModel();
 
@@ -37,27 +42,47 @@ public class RabbitMqConsumer
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-            
+
             try
             {
-                var lancamento = JsonSerializer.Deserialize<Lancamento>(message);
+                // 🔹 Desserializa a mensagem completa (incluindo Ação e Lançamento)
+                var wrapper = JsonSerializer.Deserialize<MensagemLancamento>(message);
 
-                if (lancamento == null)
+                if (wrapper == null || string.IsNullOrEmpty(wrapper.Acao))
                 {
-                    Console.WriteLine("[Erro] Mensagem recebida inválida: Deserialização resultou em null.");
+                    JsonLogger.Log("ERROR", "Mensagem inválida recebida", new { Mensagem = message });
                     return;
                 }
-                Console.WriteLine($"[x] Recebido e processado: {JsonSerializer.Serialize(lancamento)}");
 
-                // 🔹 Salvar no DynamoDB
-                await _dynamoDbService.SalvarLancamento(lancamento);
+                JsonLogger.Log("INFO", "Mensagem recebida do RabbitMQ", new { Acao = wrapper.Acao, Lançamento = wrapper.Lancamento });
+
+                if (wrapper.Acao == "ReprocessarConsolidado")
+                {
+                    await _dynamoDbService.ReprocessarConsolidado();
+                    JsonLogger.Log("INFO", "Reprocessamento solicitado");
+                }
+                else if ((wrapper.Acao == "CriarLancamento" || wrapper.Acao == "AtualizarLancamento") && wrapper.Lancamento != null)
+                {
+                    await _dynamoDbService.SalvarLancamento(wrapper.Lancamento);
+                    JsonLogger.Log("INFO", "Lançamento salvo/atualizado", new { Acao = wrapper.Acao, LancamentoId = wrapper.Lancamento.LancamentoId });
+                }
+                else if (wrapper.Acao == "DeletarLancamento" && wrapper.Lancamento != null)
+                {
+                    await _dynamoDbService.DeletarLancamento(wrapper.Lancamento.ContaId, wrapper.Lancamento.LancamentoId);
+                    JsonLogger.Log("INFO", "Lançamento removido", new { Acao = wrapper.Acao, LancamentoId = wrapper.Lancamento.LancamentoId });
+                }
+                else
+                {
+                    JsonLogger.Log("WARN", "Ação desconhecida recebida", new { Acao = wrapper.Acao });
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Erro] Falha ao processar mensagem: {ex.Message}");
+                JsonLogger.Log("ERROR", "Falha ao processar mensagem", new { Erro = ex.Message, Mensagem = message });
             }
         };
 
         channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
     }
 }
+

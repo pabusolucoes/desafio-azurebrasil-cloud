@@ -1,6 +1,11 @@
 import PropTypes from "prop-types";
 import "../styles/table.css";
 
+function formatarData(data) {
+  const dateObj = new Date(data);
+  return dateObj.toLocaleDateString("pt-BR"); // Converte para "DD/MM/AAAA"
+}
+
 function TabelaLancamentos({ lancamentos, handleSort, sortConfig, handleEdit, handleDelete }) {
   return (
     <div className="table-container">
@@ -8,8 +13,8 @@ function TabelaLancamentos({ lancamentos, handleSort, sortConfig, handleEdit, ha
         <thead>
           <tr>
             <th
-              className={sortConfig.key === "id" ? `sorted-${sortConfig.direction}` : ""}
-              onClick={() => handleSort("id")}
+              className={sortConfig.key === "lancamentoId" ? `sorted-${sortConfig.direction}` : ""}
+              onClick={() => handleSort("lancamentoId")}
             >
               ID
             </th>
@@ -48,10 +53,10 @@ function TabelaLancamentos({ lancamentos, handleSort, sortConfig, handleEdit, ha
         </thead>
         <tbody>
           {lancamentos.map((lanc) => (
-            <tr key={lanc.id}>
-              <td>{lanc.id}</td>
-              <td>{lanc.data}</td>
-              <td>{lanc.valor}</td>
+            <tr key={lanc.lancamentoId}>
+              <td title={lanc.lancamentoId}>{lanc.lancamentoId.slice(-6)}</td> {/* Exibe o ID do lançamento corretamente */}
+              <td>{formatarData(lanc.data)}</td> {/* Exibe a data formatada */}
+              <td>R$ {lanc.valor.toFixed(2)}</td>
               <td>{lanc.descricao}</td>
               <td>{lanc.tipo}</td>
               <td>{lanc.categoria}</td>
@@ -59,7 +64,7 @@ function TabelaLancamentos({ lancamentos, handleSort, sortConfig, handleEdit, ha
                 <button className="btn btn-warning" onClick={() => handleEdit(lanc)}>
                   Editar
                 </button>
-                <button className="btn btn-danger" onClick={() => handleDelete(lanc.id)}>
+                <button className="btn btn-danger" onClick={() => handleDelete(lanc.lancamentoId)}>
                   Excluir
                 </button>
               </td>
@@ -70,10 +75,11 @@ function TabelaLancamentos({ lancamentos, handleSort, sortConfig, handleEdit, ha
     </div>
   );
 }
+
 TabelaLancamentos.propTypes = {
   lancamentos: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.number.isRequired,
+      lancamentoId: PropTypes.string.isRequired, // Agora o ID é obrigatório
       data: PropTypes.string.isRequired,
       valor: PropTypes.number.isRequired,
       descricao: PropTypes.string.isRequired,
@@ -91,4 +97,3 @@ TabelaLancamentos.propTypes = {
 };
 
 export default TabelaLancamentos;
-

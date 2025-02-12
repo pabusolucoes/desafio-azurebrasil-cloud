@@ -2,13 +2,39 @@ using FluxoCaixa.ConsolidadoDiario.Extensions;
 using FluxoCaixa.ConsolidadoDiario.Models;
 using FluxoCaixa.ConsolidadoDiario.Services;
 using Microsoft.OpenApi.Models;
+using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Registra o ICustomEnvironment para ser injetado em toda aplicação
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder => builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
+// 🔹 Registra serviços para injeção de dependência
+builder.Services.AddSingleton<IDynamoDbService, DynamoDbService>();
 builder.Services.AddSingleton<ICustomEnvironment, CustomEnvironment>();
 
-// Adiciona serviços do Swagger
+// 🔹 Registra a fábrica de conexões do RabbitMQ considerando o ambiente
+builder.Services.AddSingleton<IConnectionFactory>(sp =>
+{
+    var env = sp.GetRequiredService<ICustomEnvironment>();
+
+    return new ConnectionFactory
+    {
+        HostName = env.IsLocal() ? "localhost" : "rabbitmq",
+        UserName = "admin",
+        Password = "admin"
+    };
+});
+
+// 🔹 Registra o produtor do RabbitMQ
+builder.Services.AddSingleton<IRabbitMqProducer, RabbitMqProducer>();
+
+// 🔹 Adiciona serviços do Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -16,62 +42,49 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+app.UseCors(policy=>policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
-// Obtém o serviço injetado para usar `IsLocal()`
+// 🔹 Obtém o serviço injetado para usar `IsLocal()`
 var env = app.Services.GetRequiredService<ICustomEnvironment>();
 
-var rabbitMqProducer = new RabbitMqProducer(env);
-
-if (env.IsLocal())
+if (env.IsLocal() || env.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Fluxo de Caixa-Consolidado Diário API V1");
-        c.RoutePrefix = "";  // Deixa o Swagger disponível na raiz "/"
+        c.RoutePrefix = "";  // 🔹 Deixa o Swagger disponível na raiz "/"
     });
 }
 
 List<Lancamento> lancamentos = [];
 
-app.MapGet("/consolidado-diario", () =>
+// 🔹 Endpoint para Buscar Consolidado por Período
+app.MapGet("/consolidado-diario", async (DateTime dataInicial, DateTime dataFinal, string contaId, IDynamoDbService dynamoDbService) =>
 {
-    var consolidado = lancamentos
-        .GroupBy(l => l.Data.Date)
-        .Select(g => new
-        {
-            Data = g.Key,
-            TotalDebitos = g.Where(l => l.Tipo == "DÉBITO").Sum(l => l.Valor),
-            TotalCreditos = g.Where(l => l.Tipo == "CRÉDITO").Sum(l => l.Valor),
-            Saldo = g.Sum(l => l.Tipo == "CRÉDITO" ? l.Valor : -l.Valor)
-        })
-        .ToList();
-
-    return Results.Ok(consolidado);
+    try
+    {
+        var consolidados = await dynamoDbService.ObterConsolidadoPorPeriodo(dataInicial, dataFinal, contaId);
+        return Results.Ok(consolidados);
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return Results.NotFound(ex.Message);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message);
+    }
 });
 
-app.MapGet("/consolidado-diario/{data}", (DateTime data) =>
-{
-    var consolidado = lancamentos
-        .Where(l => l.Data.Date == data.Date)
-        .GroupBy(l => l.Data.Date)
-        .Select(g => new
-        {
-            Data = g.Key,
-            TotalDebitos = g.Where(l => l.Tipo == "DÉBITO").Sum(l => l.Valor),
-            TotalCreditos = g.Where(l => l.Tipo == "CRÉDITO").Sum(l => l.Valor),
-            Saldo = g.Sum(l => l.Tipo == "CRÉDITO" ? l.Valor : -l.Valor)
-        })
-        .FirstOrDefault();
-
-    return consolidado is not null ? Results.Ok(consolidado) : Results.NotFound();
-});
-
-app.MapPost("/consolidado-diario/reprocessar", () =>
+// 🔹 Endpoint de Reprocessamento do Consolidado Diário
+app.MapPost("/consolidado-diario/reprocessar", (IRabbitMqProducer rabbitMqProducer) =>
 {
     var mensagem = new { Acao = "ReprocessarConsolidado" };
-    // Publicar mensagem no RabbitMQ
+
+    // 🔹 Publicar mensagem no RabbitMQ
     rabbitMqProducer.Publish(mensagem);
+    
     return Results.Ok("Reprocessamento iniciado.");
 });
 

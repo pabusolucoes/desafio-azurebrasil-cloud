@@ -1,36 +1,23 @@
 using FluxoCaixa.ConsolidadoDiario.Extensions;
+using FluxoCaixa.ConsolidadoDiario.Shared; // 🔹 Importação do JsonLogger
 using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
+
 namespace FluxoCaixa.ConsolidadoDiario.Services;
-public class RabbitMqProducer
+
+public class RabbitMqProducer:IRabbitMqProducer
 {
     private readonly string _queueName = "fluxo-caixa-queue";
-    private readonly ConnectionFactory _factory;
+    private readonly IConnectionFactory  _factory;
     private readonly ICustomEnvironment _env;
 
-    public RabbitMqProducer(ICustomEnvironment env)
+        public RabbitMqProducer(ICustomEnvironment env, IConnectionFactory factory)
     {
         _env = env;
+        _factory = factory;
 
-        if (_env.IsLocal())
-        {
-            _factory = new ConnectionFactory
-            {
-                HostName = "localhost",
-                UserName = "admin",
-                Password = "admin"
-            };
-        }
-        else
-        {
-            _factory = new ConnectionFactory
-            {
-                HostName = "rabbitmq",
-                UserName = "admin",
-                Password = "admin"
-            };
-        }
+        JsonLogger.Log("INFO", "RabbitMqProducer inicializado", new { Ambiente = _env.IsLocal() ? "Local" : "Produção" });
     }
 
     public void Publish<T>(T message)
@@ -42,18 +29,22 @@ public class RabbitMqProducer
 
             channel.QueueDeclare(queue: _queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
 
-            var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+            // 🔹 Serializa a mensagem para JSON
+            var messageJson = JsonSerializer.Serialize(message);
+            var body = Encoding.UTF8.GetBytes(messageJson);
 
             var properties = channel.CreateBasicProperties();
             properties.Persistent = true;
 
             channel.BasicPublish(exchange: "", routingKey: _queueName, basicProperties: properties, body: body);
 
-            Console.WriteLine($"[x] Mensagem publicada: {JsonSerializer.Serialize(message)}");
+            // 🔹 Loga a mensagem publicada no RabbitMQ
+            JsonLogger.Log("INFO", "Mensagem publicada no RabbitMQ", new { Fila = _queueName, Mensagem = message });
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Erro] Falha ao publicar mensagem: {ex.Message}");
+            // 🔹 Loga erro na publicação da mensagem
+            JsonLogger.Log("ERROR", "Falha ao publicar mensagem no RabbitMQ", new { Erro = ex.Message });
         }
     }
 }

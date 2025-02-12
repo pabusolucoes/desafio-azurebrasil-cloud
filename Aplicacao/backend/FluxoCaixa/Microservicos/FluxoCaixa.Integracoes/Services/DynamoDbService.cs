@@ -3,126 +3,202 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using FluxoCaixa.Integracoes.Extensions;
-using FluxoCaixa.Integracoes.Models; // 🔹 Adicione essa linha para reconhecer a model
+using FluxoCaixa.Integracoes.Models;
+using FluxoCaixa.Integracoes.Shared; // 🔹 Importação do JsonLogger
 
 namespace FluxoCaixa.Integracoes.Services;
-public class DynamoDbService
+
+public class DynamoDbService:IDynamoDbService
 {
     private readonly AmazonDynamoDBClient _client;
     private readonly DynamoDBContext _context;
     private const string LancamentosTableName = "Lancamentos";
     private const string ConsolidadosTableName = "ConsolidadosDiarios";
-
     private readonly ICustomEnvironment _env;
 
     public DynamoDbService(ICustomEnvironment env)
     {
         _env = env;
-        // Configura o cliente DynamoDB apontando para o DynamoDB Local
-        if (_env.IsLocal())
-        {
-            var dynamoConfig = new AmazonDynamoDBConfig
-            {
-                ServiceURL = "http://localhost:8000", // 🔹 Endereço do DynamoDB rodando no Docker
-                AuthenticationRegion = "us-east-1"
-            };
 
-            // 🔹 Configurar credenciais estáticas para evitar erro de IAM
-            _client = new AmazonDynamoDBClient("fakeMyKeyId", "fakeSecretAccessKey", dynamoConfig);
-            _context = new DynamoDBContext(_client);
-        }
-        else
+        var dynamoConfig = new AmazonDynamoDBConfig
         {
-            var dynamoConfig = new AmazonDynamoDBConfig
-            {
-                ServiceURL = "http://dynamodb:8000", // 🔹 Endereço do DynamoDB rodando no Docker
-                AuthenticationRegion = "us-east-1"
-            };
+            ServiceURL = _env.IsLocal() ? "http://localhost:8000" : "http://dynamodb:8000",
+            AuthenticationRegion = "us-east-1"
+        };
 
-            // 🔹 Configurar credenciais estáticas para evitar erro de IAM
-            _client = new AmazonDynamoDBClient("fakeMyKeyId", "fakeSecretAccessKey", dynamoConfig);
-            _context = new DynamoDBContext(_client);
-        }
+        _client = new AmazonDynamoDBClient("fakeMyKeyId", "fakeSecretAccessKey", dynamoConfig);
+        _context = new DynamoDBContext(_client);
+
+        JsonLogger.Log("INFO", "DynamoDbService inicializado", new { Ambiente = _env.IsLocal() ? "Local" : "Produção" });
     }
 
     public async Task CriarTabelasSeNaoExistirem()
     {
-        var tables = await _client.ListTablesAsync();
-
-        // Criando a tabela Lancamentos se não existir
-        if (!tables.TableNames.Contains(LancamentosTableName))
+        try
         {
-            var request = new CreateTableRequest
-            {
-                TableName = LancamentosTableName,
-                AttributeDefinitions = new List<AttributeDefinition>
-                {
-                    new AttributeDefinition { AttributeName = "ContaId", AttributeType = "S" },
-                    new AttributeDefinition { AttributeName = "LancamentoId", AttributeType = "S" },
-                    new AttributeDefinition { AttributeName = "Data", AttributeType = "S" }
-                },
-                KeySchema = new List<KeySchemaElement>
-                {
-                    new KeySchemaElement { AttributeName = "ContaId", KeyType = "HASH" },
-                    new KeySchemaElement { AttributeName = "LancamentoId", KeyType = "RANGE" }
-                },
-                GlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
-                {
-                    new GlobalSecondaryIndex
-                    {
-                        IndexName = "DataIndex",
-                        KeySchema = new List<KeySchemaElement>
-                        {
-                            new KeySchemaElement { AttributeName = "ContaId", KeyType = "HASH" },
-                            new KeySchemaElement { AttributeName = "Data", KeyType = "RANGE" }
-                        },
-                        Projection = new Projection { ProjectionType = "ALL" },
-                        ProvisionedThroughput = new ProvisionedThroughput { ReadCapacityUnits = 5, WriteCapacityUnits = 5 }
-                    }
-                },
-                ProvisionedThroughput = new ProvisionedThroughput { ReadCapacityUnits = 5, WriteCapacityUnits = 5 }
-            };
+            var tables = await _client.ListTablesAsync();
 
-            await _client.CreateTableAsync(request);
+            // Criar a tabela de Lançamentos se não existir
+            if (!tables.TableNames.Contains(LancamentosTableName))
+            {
+                var request = new CreateTableRequest
+                {
+                    TableName = LancamentosTableName,
+                    AttributeDefinitions =
+                    [
+                        new() { AttributeName = "ContaId", AttributeType = "S" },
+                        new() { AttributeName = "LancamentoId", AttributeType = "S" },
+                        new() { AttributeName = "Data", AttributeType = "S" }
+                    ],
+                    KeySchema =
+                    [
+                        new() { AttributeName = "ContaId", KeyType = "HASH" },
+                        new() { AttributeName = "LancamentoId", KeyType = "RANGE" }
+                    ],
+                    GlobalSecondaryIndexes =
+                    [
+                        new() {
+                            IndexName = "DataIndex",
+                            KeySchema =
+                            [
+                                new() { AttributeName = "ContaId", KeyType = "HASH" },
+                                new() { AttributeName = "Data", KeyType = "RANGE" }
+                            ],
+                            Projection = new Projection { ProjectionType = "ALL" },
+                            ProvisionedThroughput = new ProvisionedThroughput { ReadCapacityUnits = 5, WriteCapacityUnits = 5 }
+                        }
+                    ],
+                    ProvisionedThroughput = new ProvisionedThroughput { ReadCapacityUnits = 5, WriteCapacityUnits = 5 }
+                };
+
+                await _client.CreateTableAsync(request);
+                JsonLogger.Log("INFO", "Tabela de Lançamentos criada com sucesso");
+            }
+
+            // Criar a tabela de Consolidados se não existir
+            if (!tables.TableNames.Contains(ConsolidadosTableName))
+            {
+                var request = new CreateTableRequest
+                {
+                    TableName = ConsolidadosTableName,
+                    AttributeDefinitions =
+                    [
+                        new() { AttributeName = "ContaId", AttributeType = "S" },
+                        new() { AttributeName = "Data", AttributeType = "S" }
+                    ],
+                    KeySchema =
+                    [
+                        new() { AttributeName = "ContaId", KeyType = "HASH" },
+                        new() { AttributeName = "Data", KeyType = "RANGE" }
+                    ],
+                    ProvisionedThroughput = new ProvisionedThroughput { ReadCapacityUnits = 5, WriteCapacityUnits = 5 }
+                };
+
+                await _client.CreateTableAsync(request);
+                JsonLogger.Log("INFO", "Tabela de Consolidados criada com sucesso");
+            }
         }
-
-        // Criando a tabela ConsolidadosDiarios se não existir
-        if (!tables.TableNames.Contains(ConsolidadosTableName))
+        catch (Exception ex)
         {
-            var request = new CreateTableRequest
-            {
-                TableName = ConsolidadosTableName,
-                AttributeDefinitions = new List<AttributeDefinition>
-                {
-                    new AttributeDefinition { AttributeName = "ContaId", AttributeType = "S" },
-                    new AttributeDefinition { AttributeName = "Data", AttributeType = "S" }
-                },
-                KeySchema = new List<KeySchemaElement>
-                {
-                    new KeySchemaElement { AttributeName = "ContaId", KeyType = "HASH" },
-                    new KeySchemaElement { AttributeName = "Data", KeyType = "RANGE" }
-                },
-                ProvisionedThroughput = new ProvisionedThroughput { ReadCapacityUnits = 5, WriteCapacityUnits = 5 }
-            };
-
-            await _client.CreateTableAsync(request);
+            JsonLogger.Log("ERROR", "Erro ao criar tabelas no DynamoDB", new { Erro = ex.Message });
+            throw;
         }
     }
-    // FUNÇÃO PARA SALVAR LANÇAMENTOS NO DYNAMODB
+
     public async Task SalvarLancamento(Lancamento lancamento)
     {
-        await _context.SaveAsync(lancamento);
-        Console.WriteLine($"[DynamoDB] Lançamento salvo: {lancamento.LancamentoId}");
+        try
+        {
+            await _context.SaveAsync(lancamento);
+            JsonLogger.Log("INFO", "Lançamento salvo com sucesso", lancamento);
+        }
+        catch (Exception ex)
+        {
+            JsonLogger.Log("ERROR", "Erro ao salvar lançamento", new { LancamentoId = lancamento.LancamentoId, Erro = ex.Message });
+            throw;
+        }
     }
 
-    // FUNÇÃO PARA OBTER LANÇAMENTOS POR CONTA
     public async Task<List<Lancamento>> ObterLancamentosPorConta(string contaId)
     {
-        var conditions = new List<ScanCondition>
+        try
         {
-            new ScanCondition("ContaId", ScanOperator.Equal, contaId)
-        };
+            var conditions = new List<ScanCondition> { new("ContaId", ScanOperator.Equal, contaId) };
+            var lancamentos = await _context.ScanAsync<Lancamento>(conditions).GetRemainingAsync();
 
-        return await _context.ScanAsync<Lancamento>(conditions).GetRemainingAsync();
+            JsonLogger.Log("INFO", "Consulta de lançamentos por conta realizada", new { ContaId = contaId, Quantidade = lancamentos.Count });
+
+            return lancamentos;
+        }
+        catch (Exception ex)
+        {
+            JsonLogger.Log("ERROR", "Erro ao buscar lançamentos por conta", new { ContaId = contaId, Erro = ex.Message });
+            throw;
+        }
     }
+
+    public async Task DeletarLancamento(string contaId, Guid lancamentoId)
+    {
+        try
+        {
+            await _context.DeleteAsync<Lancamento>(contaId, lancamentoId);
+            JsonLogger.Log("INFO", "Lançamento removido do DynamoDB", new { ContaId = contaId, LancamentoId = lancamentoId });
+        }
+        catch (Exception ex)
+        {
+            JsonLogger.Log("ERROR", "Erro ao remover lançamento", new { ContaId = contaId, LancamentoId = lancamentoId, Erro = ex.Message });
+            throw;
+        }
+    }
+
+public async Task ReprocessarConsolidado(DateTime? dataInicio = null, DateTime? dataFim = null)
+    {
+        try
+        {
+            JsonLogger.Log("INFO", "Iniciando reprocessamento do consolidado...", new { DataInicio = dataInicio, DataFim = dataFim });
+
+            var lancamentos = await _context.ScanAsync<Lancamento>(new List<ScanCondition>()).GetRemainingAsync();
+
+            if (lancamentos == null || lancamentos.Count == 0)
+            {
+                JsonLogger.Log("WARN", "Nenhum lançamento encontrado para reprocessamento.");
+                return;
+            }
+
+            // 🔹 Filtrando por timestamp
+            if (dataInicio.HasValue)
+            {
+                lancamentos = lancamentos.Where(l => l.Data >= dataInicio.Value).ToList();
+            }
+            if (dataFim.HasValue)
+            {
+                lancamentos = lancamentos.Where(l => l.Data <= dataFim.Value).ToList();
+            }
+
+            var consolidado = lancamentos
+                .GroupBy(l => l.Data.Date)
+                .Select(g => new ConsolidadoDiario
+                {
+                    ContaId = g.First().ContaId,
+                    Data = g.Key.Date,
+                    TotalDebitos = g.Where(l => l.Tipo == "DÉBITO").Sum(l => l.Valor),
+                    TotalCreditos = g.Where(l => l.Tipo == "CRÉDITO").Sum(l => l.Valor),
+                    Saldo = g.Sum(l => l.Tipo == "CRÉDITO" ? l.Valor : -l.Valor)
+                }).ToList();
+
+            foreach (var item in consolidado)
+            {
+                await _context.SaveAsync(item);
+            }
+
+            JsonLogger.Log("INFO", "Reprocessamento concluído com sucesso!", new { Quantidade = consolidado.Count, DataInicio = dataInicio, DataFim = dataFim });
+        }
+        catch (Exception ex)
+        {
+            JsonLogger.Log("ERROR", "Erro ao reprocessar consolidado", new { Erro = ex.Message });
+            throw;
+        }
+    }
+
+
 }

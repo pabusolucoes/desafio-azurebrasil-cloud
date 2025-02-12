@@ -1,13 +1,15 @@
 using FluxoCaixa.Lancamentos.Extensions;
+using FluxoCaixa.Lancamentos.Shared; // 🔹 Importação do JsonLogger
 using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
+
 namespace FluxoCaixa.Lancamentos.Services;
-public class RabbitMqProducer
+
+public class RabbitMqProducer:IRabbitMqProducer
 {
     private readonly string _queueName = "fluxo-caixa-queue";
     private readonly ConnectionFactory _factory;
-
     private readonly ICustomEnvironment _env;
 
     public RabbitMqProducer(ICustomEnvironment env)
@@ -32,6 +34,8 @@ public class RabbitMqProducer
                 Password = "admin"
             };
         }
+
+        JsonLogger.Log("INFO", "RabbitMqProducer inicializado", new { Ambiente = _env.IsLocal() ? "Local" : "Produção" });
     }
 
     public void Publish<T>(T message)
@@ -43,18 +47,23 @@ public class RabbitMqProducer
 
             channel.QueueDeclare(queue: _queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
 
-            var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+            // 🔹 Serializa a mensagem no formato JSON
+            var messageJson = JsonSerializer.Serialize(message);
+            var body = Encoding.UTF8.GetBytes(messageJson);
 
             var properties = channel.CreateBasicProperties();
             properties.Persistent = true;
 
             channel.BasicPublish(exchange: "", routingKey: _queueName, basicProperties: properties, body: body);
 
-            Console.WriteLine($"[x] Mensagem publicada: {JsonSerializer.Serialize(message)}");
+            // 🔹 Loga a mensagem publicada no RabbitMQ
+            JsonLogger.Log("INFO", "Mensagem publicada no RabbitMQ", new { Fila = _queueName, Mensagem = message });
+
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Erro] Falha ao publicar mensagem: {ex.Message}");
+            // 🔹 Loga erro na publicação
+            JsonLogger.Log("ERROR", "Falha ao publicar mensagem no RabbitMQ", new { Erro = ex.Message });
         }
     }
 }
