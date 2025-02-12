@@ -1,6 +1,41 @@
 # Documentação da Arquitetura - Fluxo de Caixa
 
-[TOC]
+## 📌 Índice
+1. [Introdução](#introdução)
+2. [Visão Geral da Arquitetura](#visão-geral-da-arquitetura)
+3. [Decisões Arquiteturais](#decisões-arquiteturais)
+   - [Escolha da AWS como Plataforma Cloud](#1️⃣-escolha-da-aws-como-plataforma-cloud)
+   - [Uso de AWS Lambda na Arquitetura Base](#2️⃣-uso-de-aws-lambda-na-arquitetura-base)
+   - [Migração para ECS Fargate na Arquitetura Final](#3️⃣-migração-para-ecs-fargate-na-arquitetura-final)
+   - [Adoção de SNS/SQS na Arquitetura Base](#4️⃣-adoção-de-sns-sqs-na-arquitetura-base)
+   - [Substituição de SNS/SQS por Kafka MSK na Arquitetura Final](#5️⃣-substituição-de-sns-sqs-por-kafka-msk-na-arquitetura-final)
+   - [Implementação do CQRS](#6️⃣-implementação-do-cqrs)
+   - [Utilização de DynamoDB para Persistência](#7️⃣-utilização-de-dynamodb-para-persistência)
+   - [Uso de API Gateway](#8️⃣-uso-de-api-gateway)
+   - [Implementação de Autenticação via JWT](#9️⃣-implementação-de-autenticação-via-jwt)
+   - [Segurança e Monitoramento](#🔟-segurança-e-monitoramento)
+4. [Arquiteturas Evolutivas](#arquiteturas-evolutivas)
+   - [Arquitetura Docker (Legado)](#arquitetura-docker-legado)
+   - [Arquitetura Base](#🔄-arquitetura-base)
+   - [Arquitetura Final](#🚀-arquitetura-final)
+5. [Componentes da Arquitetura](#componentes-da-arquitetura)
+   - [Front-End](#front-end)
+   - [Microserviços](#microserviços)
+6. [Descrição técnica da Aplicação](#descrição-técnica-da-aplicação)
+   - [Requisitos Funcionais (RF)](#1️⃣-requisitos-funcionais-rf)
+   - [Requisitos Não Funcionais (RNF)](#2️⃣-requisitos-não-funcionais-rnf)
+7. [Segurança](#segurança)
+8. [Requisitos Não-Funcionais](#requisitos-não-funcionais)
+9. [Estimativa de Custos](#estimativa-de-custos)
+   - [Arquitetura Base](#arquitetura-base-1)
+   - [Arquitetura Final](#arquitetura-final-1)
+10. [Plano de Migração da Arquitetura Docker](#plano-de-migração-da-arquitetura-docker)
+    - [Cronograma](#📆-cronograma)
+    - [Custo do Projeto](#📊-custo-do-projeto)
+    - [Riscos](#⚠️-riscos)
+11. [Índice de Documentos do Projeto](#índice-de-documentos-do-projeto)
+12. [Glossário](#glossário)
+13. [Conclusão](#conclusão)
 
 
 
