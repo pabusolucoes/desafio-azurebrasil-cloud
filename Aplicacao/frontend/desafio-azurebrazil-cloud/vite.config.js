@@ -4,8 +4,12 @@ import react from "@vitejs/plugin-react-swc";
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: "0.0.0.0", // Permite acesso externo ao servidor Vite
-    port: 5173,      // Porta padrão
+    host: "0.0.0.0",  // Permite acesso externo ao servidor Vite
+    port: 5173,        // Porta padrão
+    https: {
+      key: './certificados/localhost-key.pem',    // Caminho para a chave privada SSL
+      cert: './certificados/localhost.pem',       // Caminho para o certificado SSL
+    },
   },
   resolve: {
     alias: {

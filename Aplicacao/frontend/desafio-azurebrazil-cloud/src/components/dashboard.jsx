@@ -1,20 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lancamento } from "../models/Lancamento.js";
-import { getSecureItem } from "../services/storageHelper";
 import apiFluxoCaixa from "../services/apiFluxoCaixa";
 import TabelaLancamentos from "../components/tabelaLancamentos";
-import { API_FLUXO_CAIXA, API_RELATORIO, API_AUTENTICACAO, API_INTEGRACAO } from "../config";
+import { API_FLUXO_CAIXA, API_RELATORIO, API_INTEGRACAO } from "../config";
+import { useAuth } from "../AuthContext"; // Usando o contexto
+
 
 import "../styles/dashboard.css";
 
 function Dashboard() {
   const navigate = useNavigate();
-
+  const { logout, isAuthenticated, account } = useAuth();
   // Estados para monitorar disponibilidade dos microserviços
   const [fluxoCaixaOnline, setFluxoCaixaOnline] = useState(false);
   const [relatorioOnline, setRelatorioOnline] = useState(false);
-  const [autenticacaoOnline, setAutenticacaoOnline] = useState(false);
   const [integracaoOnline, setIntegracaoOnline] = useState(false);
 
   // Função para verificar disponibilidade de um serviço
@@ -42,7 +42,6 @@ useEffect(() => {
   const atualizarStatus = () => {
     verificarServico(API_FLUXO_CAIXA, setFluxoCaixaOnline);
     verificarServico(API_RELATORIO, setRelatorioOnline);
-    verificarServico(API_AUTENTICACAO, setAutenticacaoOnline);
     verificarServico(API_INTEGRACAO, setIntegracaoOnline);
   };
 
@@ -51,15 +50,10 @@ useEffect(() => {
   const interval = setInterval(atualizarStatus, 5000); // Atualiza a cada 5 segundos
 
   return () => clearInterval(interval); // Limpa o intervalo quando o componente for desmontado
-}, [fluxoCaixaOnline, relatorioOnline, autenticacaoOnline, integracaoOnline]);
+}, [fluxoCaixaOnline, relatorioOnline, integracaoOnline]);
 
-  const logout = () => {
-    localStorage.removeItem("contaId"); // 🔹 Remove o usuário do localStorage
-    localStorage.removeItem("apiKey");
-    
-    navigate("/"); // 🔹 Redireciona para a tela de login
-  };
-  const contaId = getSecureItem("contaId"); //Obtém o contaId do usuário logado
+  
+  const contaId = account.username; //Obtém o contaId do usuário logado
 
   const [filteredLancamentos, setFilteredLancamentos] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -151,7 +145,10 @@ const atualizarLancamento = async (e) => {
       data: dataFormatada, //Agora o input de data aceita o valor correto
     });
   };
-
+  if (!isAuthenticated) {
+    navigate("/");
+    return <div>Você não está autenticado. Faça login!</div>;
+  }
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -161,7 +158,6 @@ const atualizarLancamento = async (e) => {
         <div className="status-container">
           <span className={`status-indicator ${fluxoCaixaOnline ? "online" : "offline"}`} title="Fluxo de Caixa"></span>
           <span className={`status-indicator ${relatorioOnline ? "online" : "offline"}`} title="Relatórios"></span>
-          <span className={`status-indicator ${autenticacaoOnline ? "online" : "offline"}`} title="Autenticação"></span>
           <span className={`status-indicator ${integracaoOnline ? "online" : "offline"}`} title="Integrações"></span>
         </div>
       </div>

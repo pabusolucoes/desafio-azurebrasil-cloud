@@ -1,38 +1,45 @@
-import { jwtDecode } from "jwt-decode"; // ✅ CORRETO
-import  { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import apiLogin from "../services/apiLogin";
+import { useState, useEffect } from "react";
 import { setSecureItem } from "../services/storageHelper";
-import "../styles/login.css"; // Estilos centralizados na pasta styles
+import { useAuth } from "../AuthContext"; // Importa o contexto de autenticação
+import "../styles/login.css";
 
 function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const navigate = useNavigate();
+  const [error, setError] = useState(""); // Gerencia o erro
+  const { login, isAuthenticated } = useAuth(); // Acesso ao login e estado de autenticação
+  
 
-    // Mock de autenticação
-    
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  // Função para lidar com o redirecionamento após a autenticação
+  const handleRedirectResponse = async () => {
     try {
-      const response = await apiLogin.post("/auth/login", { username, password });
-      const { token, user } = response.data;
+      const response = await msalInstance.handleRedirectPromise(); // Obtém a resposta do redirect
 
-      if(token) {
-        const decodedToken  = jwtDecode(token);
-        const apiKey = decodedToken.api_key;
+      if (response) {
+        const { account, accessToken } = response;
 
-        if (apiKey){
-          setSecureItem("apiKey", apiKey);
-          setSecureItem("contaId", user);
-          navigate("/dashboard");
-        }        
+        if (accessToken) {
+          // Armazenar o token e o contaId no localStorage de forma segura
+          setSecureItem("apiKey", accessToken);
+          setSecureItem("contaId", account.username); // Salva o username como contaId
+        }
       }
-      
-    } catch {
-        console.warn("API indisponível");
+    } catch (error) {
+      console.warn("Erro de autenticação:", error);
+      setError("Falha na autenticação. Tente novamente."); // Exibe a mensagem de erro para o usuário
     }
   };
+
+  // Verifica se houve resposta após o redirecionamento ao carregar a página
+  useEffect(() => {
+    if (!isAuthenticated) {
+      handleRedirectResponse();
+    }
+     // Verifica se a autenticação foi realizada ao retornar do login
+  }, [isAuthenticated]);
+
+  if (isAuthenticated) {
+    return <div>Você já está logado!</div>;
+    
+  }
 
   return (
     <div className="login-page">
@@ -46,36 +53,40 @@ function Login() {
           <h2 className="login-title">Bem-vindo</h2>
           <p className="login-subtitle">Acesse o painel com suas credenciais</p>
         </div>
-        <form onSubmit={handleLogin}>
+
+        <form onSubmit={(e) => { e.preventDefault(); login(); }}>
           <div className="form-group">
             <label htmlFor="username">Usuário</label>
             <input
               type="text"
               id="username"
               className="form-control"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
               required
               placeholder="Digite seu usuário"
             />
           </div>
+
           <div className="form-group">
             <label htmlFor="password">Senha</label>
             <input
               type="password"
               id="password"
               className="form-control"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="Digite sua senha"
             />
           </div>
+
           <button type="submit" className="btn btn-primary btn-block">
             Entrar
           </button>
         </form>
-        <p>Não tem uma conta? <a href="/register">Registre-se aqui</a></p>
+
+        {error && <p className="error-message">{error}</p>}
+
+        <p>
+          Não tem uma conta? <a href="/register">Registre-se aqui</a>
+        </p>
       </div>
     </div>
   );

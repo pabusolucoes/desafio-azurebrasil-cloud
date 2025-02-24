@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiRelatorio from "../services/apiRelatorio";
-import { getSecureItem } from "../services/storageHelper";
 import "../styles/relatorio.css";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { useAuth } from "../AuthContext"; // Importa o contexto de autenticação
 
 function RelatorioConsolidado() {
 
@@ -18,7 +18,8 @@ function RelatorioConsolidado() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [erro, setErro] = useState(""); // 🔹 Novo estado para mensagens de erro
   const itensPorPagina = 10; // 🔹 Define quantos registros mostrar por página
-  const contaId = getSecureItem("contaId"); //Obtém o contaId do usuário logado
+  const { account } = useAuth();
+  const contaId = account.username; //Obtém o contaId do usuário logado
 
   const gerarRelatorio = async (e) => {
     e.preventDefault();
